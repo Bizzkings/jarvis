@@ -11,12 +11,12 @@ import DataPanel from './DataPanel'
 import TranscriptDisplay from './TranscriptDisplay'
 
 const STATUS_TEXT: Record<AssistantState, string> = {
-  idle:       'Click orb to speak',
-  wake:       'Say "Hey Jarvis"...',
-  listening:  'Listening...',
-  processing: 'Processing...',
-  speaking:   'Speaking...',
-  error:      'Something went wrong',
+  idle:       '— STANDBY —',
+  wake:       'SAY "HEY JARVIS"',
+  listening:  'VOICE INPUT ACTIVE',
+  processing: 'PROCESSING QUERY',
+  speaking:   'TRANSMITTING',
+  error:      'SYSTEM ERROR',
 }
 
 export default function JarvisCore() {
@@ -157,11 +157,11 @@ export default function JarvisCore() {
 
   const statusColor =
     assistantState === 'listening'  ? '#ff2d9c' :
-    assistantState === 'processing' ? '#00d9ff' :
+    assistantState === 'processing' ? '#00d4ff' :
     assistantState === 'speaking'   ? '#c77dff' :
-    assistantState === 'wake'       ? '#9d4edd' :
+    assistantState === 'wake'       ? '#00d4ff' :
     assistantState === 'error'      ? '#ff4444' :
-    'rgba(157,78,221,0.5)'
+    'rgba(0,180,255,0.4)'
 
   return (
     <div className="flex flex-col items-center gap-6 w-full z-10">
@@ -172,21 +172,21 @@ export default function JarvisCore() {
           onClick={toggleAlwaysListen}
           className="flex items-center gap-2 px-4 py-1.5 rounded-full text-xs tracking-widest uppercase transition-all duration-300"
           style={{
-            background: alwaysListen ? 'rgba(157,78,221,0.2)' : 'rgba(255,255,255,0.04)',
-            border: `1px solid ${alwaysListen ? 'rgba(157,78,221,0.5)' : 'rgba(255,255,255,0.08)'}`,
-            color: alwaysListen ? '#c77dff' : 'rgba(157,78,221,0.5)',
-            boxShadow: alwaysListen ? '0 0 15px rgba(157,78,221,0.2)' : 'none',
+            background: alwaysListen ? 'rgba(0,212,255,0.12)' : 'rgba(255,255,255,0.03)',
+            border: `1px solid ${alwaysListen ? 'rgba(0,212,255,0.38)' : 'rgba(0,180,255,0.1)'}`,
+            color: alwaysListen ? '#00d4ff' : 'rgba(0,160,220,0.45)',
+            boxShadow: alwaysListen ? '0 0 15px rgba(0,212,255,0.15)' : 'none',
           }}
         >
           <span
             className="w-1.5 h-1.5 rounded-full"
             style={{
-              background: alwaysListen ? '#9d4edd' : 'rgba(157,78,221,0.3)',
-              boxShadow: alwaysListen ? '0 0 6px #9d4edd' : 'none',
-              animation: alwaysListen ? 'pulse-purple 1.5s ease-in-out infinite' : 'none',
+              background: alwaysListen ? '#00d4ff' : 'rgba(0,180,255,0.25)',
+              boxShadow: alwaysListen ? '0 0 6px #00d4ff' : 'none',
+              animation: alwaysListen ? 'pulse-cyan 1.5s ease-in-out infinite' : 'none',
             }}
           />
-          {alwaysListen ? 'Hey Jarvis mode on' : 'Enable hey Jarvis'}
+          {alwaysListen ? 'HEY JARVIS ON' : 'ENABLE HEY JARVIS'}
         </button>
       )}
 

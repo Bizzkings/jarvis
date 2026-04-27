@@ -185,6 +185,18 @@
   100% { top: 105%; opacity: 0; }
 }
 
+/* HUD indicator blink */
+@keyframes hud-blink {
+  0%, 86%, 100% { opacity: 1; }
+  90% { opacity: 0.25; }
+}
+
+/* Cyan pulse for always-listen dot */
+@keyframes pulse-cyan {
+  0%, 100% { box-shadow: 0 0 4px #00d4ff; }
+  50%       { box-shadow: 0 0 10px #00d4ff, 0 0 20px rgba(0,212,255,0.4); }
+}
+
 /* Thin scrollbar for transcript */
 .scrollbar-thin { scrollbar-width: thin; }
 ::-webkit-scrollbar { width: 4px; height: 4px; }
