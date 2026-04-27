@@ -16,34 +16,45 @@ export default function TranscriptDisplay({ entries }: Props) {
 
   if (!entries.length) {
     return (
-      <p className="text-[#6b9dc2] text-sm text-center py-4">
-        Your conversation will appear here
+      <p className="text-xs tracking-widest uppercase py-4" style={{ color: 'rgba(157,78,221,0.5)' }}>
+        Conversation will appear here
       </p>
     )
   }
 
   return (
-    <div className="w-full max-w-lg flex flex-col gap-2 max-h-52 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10">
+    <div className="w-full max-w-lg flex flex-col gap-3 max-h-52 overflow-y-auto pr-1 scrollbar-thin">
       {entries.map((entry) => (
         <div
           key={entry.id}
-          className={`flex flex-col gap-0.5 ${
-            entry.role === 'user' ? 'items-end' : 'items-start'
-          }`}
+          className={`flex flex-col gap-0.5 ${entry.role === 'user' ? 'items-end' : 'items-start'}`}
         >
           {entry.role === 'assistant' && entry.agentName && (
-            <span className="text-xs text-[#6b9dc2] ml-1">{entry.agentName}</span>
+            <span className="text-xs ml-2 tracking-widest uppercase" style={{ color: 'rgba(157,78,221,0.6)' }}>
+              {entry.agentName}
+            </span>
           )}
           <div
-            className={`px-4 py-2 rounded-2xl text-sm max-w-xs ${
+            className="px-4 py-2.5 rounded-2xl text-sm max-w-xs"
+            style={
               entry.role === 'user'
-                ? 'bg-[#0d2a3d] text-white rounded-tr-sm'
-                : 'bg-[#091a2a] border border-white/10 text-white/80 rounded-tl-sm'
-            }`}
+                ? {
+                    background: 'rgba(123, 47, 255, 0.25)',
+                    border: '1px solid rgba(157, 78, 221, 0.35)',
+                    borderTopRightRadius: 4,
+                    color: 'rgba(255,255,255,0.9)',
+                  }
+                : {
+                    background: 'rgba(26, 0, 53, 0.6)',
+                    border: '1px solid rgba(157, 78, 221, 0.2)',
+                    borderTopLeftRadius: 4,
+                    color: 'rgba(255,255,255,0.75)',
+                  }
+            }
           >
             {entry.text}
           </div>
-          <span className="text-xs text-white/20 mx-1">
+          <span className="text-xs mx-2" style={{ color: 'rgba(123,47,255,0.4)' }}>
             {entry.timestamp.toLocaleTimeString('en-US', {
               hour: 'numeric',
               minute: '2-digit',

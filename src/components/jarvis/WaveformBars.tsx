@@ -4,20 +4,29 @@ interface Props {
   active: boolean
 }
 
-const DELAYS = ['0ms', '80ms', '160ms', '240ms', '320ms', '240ms', '160ms', '80ms']
+const DELAYS = ['0ms', '70ms', '140ms', '210ms', '280ms', '350ms', '280ms', '210ms', '140ms', '70ms']
 
 export default function WaveformBars({ active }: Props) {
   return (
-    <div className="flex items-center justify-center gap-1.5 h-10" aria-hidden>
+    <div className="flex items-center justify-center gap-1 h-12" aria-hidden>
       {DELAYS.map((delay, i) => (
         <span
           key={i}
-          className={`w-1 rounded-full transition-all duration-300 ${
+          className="w-1 rounded-full transition-all duration-300"
+          style={
             active
-              ? 'animate-[waveform_0.8s_ease-in-out_infinite] bg-[#00d4ff]'
-              : 'h-1 bg-[#00d4ff]/20'
-          }`}
-          style={active ? { animationDelay: delay } : undefined}
+              ? {
+                  height: 4,
+                  animation: `waveform 0.6s ease-in-out infinite`,
+                  animationDelay: delay,
+                  background: `linear-gradient(to top, #7b2fff, #c77dff)`,
+                  boxShadow: '0 0 6px #9d4edd88',
+                }
+              : {
+                  height: 4,
+                  background: 'rgba(157, 78, 221, 0.2)',
+                }
+          }
         />
       ))}
     </div>

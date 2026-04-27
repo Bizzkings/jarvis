@@ -131,44 +131,62 @@
 
 /* ── Jarvis custom keyframes ───────────────────────────── */
 
-@keyframes orb-idle {
-  0%, 100% { transform: scale(1);   opacity: 0.6; }
-  50%       { transform: scale(1.06); opacity: 0.9; }
+/* Orb floating up and down */
+@keyframes float {
+  0%, 100% { transform: translateY(0px)   rotate(0deg); }
+  40%       { transform: translateY(-18px) rotate(0.8deg); }
+  70%       { transform: translateY(-10px) rotate(-0.5deg); }
 }
 
-@keyframes orb-listen {
-  0%, 100% { transform: scale(1);    opacity: 0.7; }
-  50%       { transform: scale(1.18); opacity: 1;   }
+/* Orb vibrating when speaking */
+@keyframes orb-shake {
+  0%, 100% { transform: translateX(0); }
+  15%  { transform: translateX(-5px) rotate(-0.8deg); }
+  30%  { transform: translateX(5px)  rotate(0.8deg);  }
+  45%  { transform: translateX(-4px); }
+  60%  { transform: translateX(4px);  }
+  75%  { transform: translateX(-2px); }
+  90%  { transform: translateX(2px);  }
 }
 
-@keyframes orb-spin {
+/* Ring clockwise rotation */
+@keyframes ring-cw {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
 
-@keyframes orb-pulse {
-  0%, 100% { box-shadow: 0 0 30px #00d4ff55; }
-  50%       { box-shadow: 0 0 60px #00d4ffaa; }
+/* Ring counter-clockwise rotation */
+@keyframes ring-ccw {
+  from { transform: rotate(360deg); }
+  to   { transform: rotate(0deg); }
 }
 
-@keyframes orb-error {
-  0%, 100% { background-color: transparent; }
-  50%       { background-color: #ef444433; }
+/* Core orb purple pulse */
+@keyframes pulse-purple {
+  0%, 100% {
+    box-shadow: 0 0 40px #7b2fff88, 0 0 80px #4a008066, inset 0 0 20px #9d4edd33;
+  }
+  50% {
+    box-shadow: 0 0 60px #9d4eddbb, 0 0 120px #7b2fff77, inset 0 0 30px #c77dff44;
+  }
 }
 
-@keyframes orb-ripple {
-  0%   { transform: scale(1);   opacity: 0.6; }
-  100% { transform: scale(1.4); opacity: 0;   }
-}
-
+/* Waveform bars for speaking */
 @keyframes waveform {
-  0%, 100% { height: 4px;  }
-  50%       { height: 32px; }
+  0%, 100% { height: 4px;  opacity: 0.4; }
+  50%       { height: 36px; opacity: 1;   }
+}
+
+/* Scan line sweep */
+@keyframes scan {
+  0%   { top: -5%; opacity: 0; }
+  5%   { opacity: 0.6; }
+  95%  { opacity: 0.6; }
+  100% { top: 105%; opacity: 0; }
 }
 
 /* Thin scrollbar for transcript */
 .scrollbar-thin { scrollbar-width: thin; }
-.scrollbar-thumb-white\/10::-webkit-scrollbar-thumb { background: rgb(255 255 255 / 0.1); border-radius: 9999px; }
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgb(255 255 255 / 0.1); border-radius: 9999px; }
+::-webkit-scrollbar-thumb { background: rgba(157, 78, 221, 0.3); border-radius: 9999px; }

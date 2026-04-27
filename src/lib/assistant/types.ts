@@ -1,4 +1,4 @@
-export type AssistantState = 'idle' | 'listening' | 'processing' | 'speaking' | 'error'
+export type AssistantState = 'idle' | 'wake' | 'listening' | 'processing' | 'speaking' | 'error'
 
 export interface AgentContext {
   transcript: string
@@ -26,10 +26,15 @@ export interface TranscriptEntry {
 export interface UseVoiceRecognitionReturn {
   isSupported: boolean
   isListening: boolean
+  isWakeMode: boolean
+  wakeDetected: boolean
   transcript: string
   startListening(): void
   stopListening(): void
   resetTranscript(): void
+  resetWakeDetected(): void
+  enableWakeWord(): void
+  disableWakeWord(): void
 }
 
 export interface UseSpeechSynthesisReturn {
