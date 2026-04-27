@@ -7,13 +7,13 @@ export function useVoiceRecognition(): UseVoiceRecognitionReturn {
   const [isListening, setIsListening] = useState(false)
   const [transcript, setTranscript] = useState('')
   const recognitionRef = useRef<SpeechRecognition | null>(null)
-  const isSupported = useRef(false)
+  const [isSupported, setIsSupported] = useState(false)
 
   useEffect(() => {
     const SR = window.SpeechRecognition ?? window.webkitSpeechRecognition
     if (!SR) return
 
-    isSupported.current = true
+    setIsSupported(true)
     const recognition = new SR()
     recognition.continuous = false
     recognition.interimResults = false
@@ -56,7 +56,7 @@ export function useVoiceRecognition(): UseVoiceRecognitionReturn {
   }, [])
 
   return {
-    isSupported: isSupported.current,
+    isSupported,
     isListening,
     transcript,
     startListening,
