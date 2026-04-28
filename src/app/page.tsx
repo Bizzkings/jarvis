@@ -145,30 +145,7 @@ export default function Home() {
       </div>
 
       {/* ── Main content ── */}
-      <div className="relative flex flex-col items-center gap-2 z-10 w-full">
-
-        {/* Title */}
-        <div className="flex flex-col items-center gap-1.5 mb-2">
-          <div className="flex items-center gap-3">
-            <div className="h-px w-8" style={{ background: 'linear-gradient(to right, transparent, rgba(0,212,255,0.4))' }} />
-            <span className="text-[9px] tracking-[0.4em] uppercase" style={{ color: 'rgba(0,212,255,0.35)' }}>SYSTEM</span>
-            <div className="h-px w-8" style={{ background: 'linear-gradient(to left, transparent, rgba(0,212,255,0.4))' }} />
-          </div>
-          <h1
-            className="text-4xl font-extralight tracking-[0.5em] uppercase select-none text-white"
-            style={{ textShadow: '0 0 20px rgba(0,212,255,0.55), 0 0 50px rgba(80,20,200,0.35)' }}
-          >
-            J.A.R.V.I.S
-          </h1>
-          <p className="text-[9px] tracking-[0.35em] uppercase" style={{ color: 'rgba(0,180,255,0.35)' }}>
-            Just A Rather Very Intelligent System
-          </p>
-          <div className="flex items-center gap-3 mt-1">
-            <div className="h-px w-12" style={{ background: 'linear-gradient(to right, transparent, rgba(0,212,255,0.35))' }} />
-            <div className="w-1 h-1 rounded-full" style={{ background: '#00d4ff', boxShadow: '0 0 6px #00d4ff' }} />
-            <div className="h-px w-12" style={{ background: 'linear-gradient(to left, transparent, rgba(0,212,255,0.35))' }} />
-          </div>
-        </div>
+      <div className="relative flex flex-col items-center justify-center gap-2 z-10 w-full min-h-screen">
 
         <JarvisCore />
 
