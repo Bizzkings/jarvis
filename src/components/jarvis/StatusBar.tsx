@@ -7,78 +7,50 @@ interface Props {
   agentName?: string | null
 }
 
-const STATUS_MAP: Record<AssistantState, { label: string; sublabel: string }> = {
-  idle:       { label: '— STANDBY —',          sublabel: 'AWAITING ACTIVATION'       },
-  wake:       { label: 'SAY "HEY JARVIS"',      sublabel: 'WAKE WORD LISTENING'       },
-  listening:  { label: 'VOICE INPUT ACTIVE',    sublabel: 'CAPTURING AUDIO STREAM'    },
-  processing: { label: 'THINKING...',           sublabel: 'ANALYZING QUERY'           },
-  speaking:   { label: 'TRANSMITTING',          sublabel: 'GENERATING RESPONSE'       },
-  error:      { label: 'SYSTEM ERROR',          sublabel: 'RECOVERY PROTOCOL ACTIVE'  },
-}
-
-const DOT_COLOR: Record<AssistantState, string> = {
-  idle:       'rgba(130,60,255,0.55)',
-  wake:       '#9d4edd',
-  listening:  '#ff2d9c',
-  processing: '#00d4ff',
-  speaking:   '#c77dff',
-  error:      '#ff4444',
-}
-
-const TEXT_COLOR: Record<AssistantState, string> = {
-  idle:       'rgba(150,90,255,0.55)',
-  wake:       'rgba(160,100,255,0.75)',
-  listening:  '#ff2d9c',
-  processing: '#00d4ff',
-  speaking:   '#c77dff',
-  error:      '#ff4444',
+const STATUS_MAP: Record<AssistantState, { label: string; sub: string }> = {
+  idle:       { label: 'JARVIS CORE // IDLE',       sub: 'AWAITING INPUT · SYSTEMS NOMINAL'   },
+  wake:       { label: 'JARVIS CORE // STANDBY',    sub: 'WAKE WORD LISTENING · READY'        },
+  listening:  { label: 'JARVIS CORE // LISTENING',  sub: 'AUDIO PROCESSING · NEURAL ACTIVE'   },
+  processing: { label: 'JARVIS CORE // PROCESSING', sub: 'DEEP COMPUTATION · MATRIX ENGAGED'  },
+  speaking:   { label: 'JARVIS CORE // SPEAKING',   sub: 'OUTPUT ACTIVE · VOICE SYNTHESIS ON' },
+  error:      { label: 'JARVIS CORE // ERROR',      sub: 'RECOVERY PROTOCOL ACTIVE'           },
 }
 
 export default function StatusBar({ state, agentName }: Props) {
-  const { label, sublabel } = STATUS_MAP[state]
-  const dotColor  = DOT_COLOR[state]
-  const textColor = TEXT_COLOR[state]
+  const { label, sub } = STATUS_MAP[state]
 
   return (
-    <div className="flex flex-col items-center gap-1.5">
-      {/* Main status */}
+    <div className="flex flex-col items-center gap-2">
       <div className="flex items-center gap-2.5">
-        <span
-          className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-          style={{
-            background: dotColor,
-            boxShadow: state !== 'idle' ? `0 0 8px ${dotColor}` : 'none',
-            animation: state === 'listening' || state === 'speaking'
-              ? 'pulse-purple 0.9s ease-in-out infinite'
-              : state === 'wake'
-              ? 'hud-blink 2s ease-in-out infinite'
-              : 'none',
-          }}
-        />
-        <p
-          className="text-xs tracking-[0.30em] uppercase transition-colors duration-300 font-mono"
-          style={{ color: textColor }}
-        >
+        <span className="w-1.5 h-1.5 rounded-full" style={{
+          background: '#cc66ff',
+          boxShadow: '0 0 16px #aa33ff, 0 0 32px #7700cc',
+          animation: 'sdot 2s ease-in-out infinite',
+        }} />
+        <p style={{
+          fontFamily: 'var(--font-orbitron)',
+          fontSize: 13,
+          fontWeight: 500,
+          letterSpacing: '5px',
+          color: '#e8d0ff',
+          textShadow: '0 0 30px #cc44ff, 0 0 60px #9900ee, 0 0 90px #6600aa',
+          transition: 'all 0.5s ease',
+        }}>
           {label}
         </p>
-        <span
-          className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-          style={{
-            background: dotColor,
-            boxShadow: state !== 'idle' ? `0 0 8px ${dotColor}` : 'none',
-            animation: state === 'listening' || state === 'speaking'
-              ? 'pulse-purple 0.9s ease-in-out infinite 0.45s'
-              : 'none',
-          }}
-        />
+        <span className="w-1.5 h-1.5 rounded-full" style={{
+          background: '#cc66ff',
+          boxShadow: '0 0 16px #aa33ff, 0 0 32px #7700cc',
+          animation: 'sdot 2s ease-in-out 1s infinite',
+        }} />
       </div>
-
-      {/* Sublabel / agent name */}
-      <p
-        className="text-[9px] tracking-[0.25em] uppercase font-mono"
-        style={{ color: 'rgba(130,70,230,0.40)' }}
-      >
-        {agentName ? `MODULE: ${agentName.toUpperCase()}` : sublabel}
+      <p style={{
+        fontFamily: 'var(--font-orbitron)',
+        fontSize: 10,
+        letterSpacing: '3px',
+        color: 'rgba(0,180,220,0.6)',
+      }}>
+        {agentName ? `MODULE: ${agentName.toUpperCase()}` : sub}
       </p>
     </div>
   )

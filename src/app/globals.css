@@ -203,6 +203,19 @@
   50%       { opacity: 1.0; }
 }
 
+/* Animated data bar (side panels) */
+@keyframes bar-scan {
+  0%   { width: 30%; }
+  50%  { width: 85%; }
+  100% { width: 30%; }
+}
+
+/* Status dot pulse */
+@keyframes sdot {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.25; }
+}
+
 /* Thin scrollbar for transcript */
 .scrollbar-thin { scrollbar-width: thin; }
 ::-webkit-scrollbar { width: 4px; height: 4px; }

@@ -6,7 +6,6 @@ import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis'
 import { routeCommand } from '@/lib/assistant/commandRouter'
 import type { AssistantState, TranscriptEntry } from '@/lib/assistant/types'
 import JarvisOrb from './JarvisOrb'
-import WaveformBars from './WaveformBars'
 import DataPanel from './DataPanel'
 import TranscriptDisplay from './TranscriptDisplay'
 import StatusBar from './StatusBar'
@@ -19,6 +18,7 @@ export default function JarvisCore() {
   const [lastAgentData, setLastAgentData]   = useState<unknown>(null)
   const [dataPanelVisible, setDataPanelVisible] = useState(false)
   const [alwaysListen, setAlwaysListen]     = useState(false)
+  const [orbBottom, setOrbBottom]           = useState(0)
 
   const {
     isSupported, isListening, wakeDetected,
@@ -48,7 +48,15 @@ export default function JarvisCore() {
     return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current) }
   }, [isListening, stopListening])
 
-  // ── Core dispatch ────────────────────────────────────────────────────────────
+  const appendEntry = useCallback((entry: Omit<TranscriptEntry, 'id'>) => {
+    setEntries(prev => [...prev, { ...entry, id: crypto.randomUUID() }])
+  }, [])
+
+  const returnToReady = useCallback(() => {
+    if (alwaysListenRef.current) { setAssistantState('wake'); enableWakeWord() }
+    else setAssistantState('idle')
+  }, [enableWakeWord])
+
   const runCommand = useCallback(async (text: string) => {
     if (processingRef.current) return
     processingRef.current = true
@@ -91,15 +99,6 @@ export default function JarvisCore() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transcript, isListening])
 
-  const appendEntry = useCallback((entry: Omit<TranscriptEntry, 'id'>) => {
-    setEntries(prev => [...prev, { ...entry, id: crypto.randomUUID() }])
-  }, [])
-
-  const returnToReady = useCallback(() => {
-    if (alwaysListenRef.current) { setAssistantState('wake'); enableWakeWord() }
-    else setAssistantState('idle')
-  }, [enableWakeWord])
-
   const handleOrbClick = useCallback(() => {
     if (assistantState === 'idle' || assistantState === 'wake') {
       disableWakeWord(); startListening(); setAssistantState('listening')
@@ -119,7 +118,6 @@ export default function JarvisCore() {
     }
   }, [alwaysListen, assistantState, enableWakeWord, disableWakeWord])
 
-  // ── State override from CommandPanel ─────────────────────────────────────────
   const handleStateChange = useCallback((s: AssistantState) => {
     if (processingRef.current) return
     cancel()
@@ -132,55 +130,78 @@ export default function JarvisCore() {
     setAssistantState(s)
   }, [cancel, disableWakeWord, startListening, stopListening])
 
+  const handleGeometry = useCallback((_cx: number, cy: number, r: number) => {
+    setOrbBottom(cy + r + 18)
+  }, [])
+
   const isBusy = assistantState === 'listening' || assistantState === 'processing' || assistantState === 'speaking'
 
   return (
-    <div className="flex flex-col items-center gap-5 w-full z-10">
-
-      {/* Always-listen toggle */}
-      {isSupported && (
-        <button
-          onClick={toggleAlwaysListen}
-          className="flex items-center gap-2 px-4 py-1.5 rounded-full text-xs tracking-widest uppercase transition-all duration-300 font-mono"
-          style={{
-            background: alwaysListen ? 'rgba(130,60,255,0.12)' : 'rgba(255,255,255,0.03)',
-            border: `1px solid ${alwaysListen ? 'rgba(140,70,255,0.40)' : 'rgba(120,60,220,0.12)'}`,
-            color: alwaysListen ? '#b57bff' : 'rgba(140,90,220,0.48)',
-            boxShadow: alwaysListen ? '0 0 15px rgba(130,60,255,0.18)' : 'none',
-          }}
-        >
-          <span className="w-1.5 h-1.5 rounded-full" style={{
-            background: alwaysListen ? '#9d4edd' : 'rgba(120,60,200,0.28)',
-            boxShadow: alwaysListen ? '0 0 6px #9d4edd' : 'none',
-            animation: alwaysListen ? 'pulse-purple 1.5s ease-in-out infinite' : 'none',
-          }} />
-          {alwaysListen ? 'HEY JARVIS ON' : 'ENABLE HEY JARVIS'}
-        </button>
-      )}
-
-      {/* Orb */}
-      <JarvisOrb state={assistantState} onClick={handleOrbClick} isSupported={isSupported} />
-
-      {/* Status bar */}
-      <StatusBar state={assistantState} agentName={lastAgentName} />
-
-      {/* Waveform */}
-      <WaveformBars active={assistantState === 'speaking'} />
-
-      {/* Data Panel */}
-      <DataPanel agentName={lastAgentName} data={lastAgentData} visible={dataPanelVisible} />
-
-      {/* Transcript */}
-      <TranscriptDisplay entries={entries} />
-
-      {/* Command panel */}
-      <CommandPanel
-        onCommand={cmd => runCommand(cmd).then(resetTranscript)}
-        onStateChange={handleStateChange}
-        currentState={assistantState}
-        disabled={isBusy}
+    <>
+      {/* Full-viewport canvas (z-0) */}
+      <JarvisOrb
+        state={assistantState}
+        onClick={handleOrbClick}
+        isSupported={isSupported}
+        onGeometry={handleGeometry}
       />
 
-    </div>
+      {/* HTML overlay (z-10) */}
+      <div className="absolute inset-0 pointer-events-none z-10">
+
+        {/* Always-listen toggle — top center, below title */}
+        {isSupported && (
+          <div className="absolute top-16 left-1/2 -translate-x-1/2 pointer-events-auto">
+            <button
+              onClick={toggleAlwaysListen}
+              className="flex items-center gap-2 px-4 py-1.5 rounded-full text-xs tracking-widest uppercase transition-all duration-300"
+              style={{
+                fontFamily: 'var(--font-orbitron)',
+                background: alwaysListen ? 'rgba(0,80,140,0.35)' : 'rgba(0,20,40,0.4)',
+                border: `1px solid ${alwaysListen ? 'rgba(0,200,255,0.55)' : 'rgba(0,120,180,0.3)'}`,
+                color: alwaysListen ? '#c0eeff' : 'rgba(0,160,200,0.55)',
+                boxShadow: alwaysListen ? '0 0 15px rgba(0,160,255,0.3)' : 'none',
+              }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full" style={{
+                background: alwaysListen ? 'rgba(0,200,255,0.9)' : 'rgba(0,120,180,0.4)',
+                boxShadow: alwaysListen ? '0 0 6px rgba(0,200,255,0.8)' : 'none',
+                animation: alwaysListen ? 'sdot 1.5s ease-in-out infinite' : 'none',
+              }} />
+              {alwaysListen ? 'HEY JARVIS ON' : 'ENABLE HEY JARVIS'}
+            </button>
+          </div>
+        )}
+
+        {/* Status label — positioned below orb */}
+        {orbBottom > 0 && (
+          <div className="absolute left-1/2 -translate-x-1/2" style={{ top: orbBottom }}>
+            <StatusBar state={assistantState} agentName={lastAgentName} />
+          </div>
+        )}
+
+        {/* Data panel */}
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-44 pointer-events-none">
+          <DataPanel agentName={lastAgentName} data={lastAgentData} visible={dataPanelVisible} />
+        </div>
+
+        {/* Transcript */}
+        <div className="absolute left-1/2 -translate-x-1/2 w-full max-w-xl bottom-40 pointer-events-auto px-4"
+             style={{ maxHeight: 160, overflowY: 'auto' }}>
+          <TranscriptDisplay entries={entries} />
+        </div>
+
+      </div>
+
+      {/* Command panel — bottom (z-10, pointer-events:auto) */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 flex justify-center pointer-events-auto">
+        <CommandPanel
+          onCommand={cmd => runCommand(cmd).then(resetTranscript)}
+          onStateChange={handleStateChange}
+          currentState={assistantState}
+          disabled={isBusy}
+        />
+      </div>
+    </>
   )
 }
