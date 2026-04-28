@@ -10,75 +10,55 @@ interface Props {
   isSupported: boolean
 }
 
-interface Particle {
-  theta: number
-  sinPhi: number
-  cosPhi: number
-  r: number; g: number; b: number
-  size: number
-  ts: number
-  tp: number
-}
+interface Jiggle { dx: number; dy: number; vx: number; vy: number }
 
-interface Jiggle {
-  dx: number; dy: number
-  vx: number; vy: number
-  inside: boolean
-}
-
-// Fibonacci sphere distribution — 420 particles on surface
-const PARTICLES: Particle[] = (() => {
-  const golden = Math.PI * (3 - Math.sqrt(5))
-  const out: Particle[] = []
-  // Seed-like deterministic random using golden ratio
-  let seed = 0.6180339887
-  const rand = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280 }
-  for (let i = 0; i < 420; i++) {
-    const y  = 1 - (i / 419) * 2
-    const rr = Math.sqrt(Math.max(0, 1 - y * y))
-    const th = golden * i
-    const pr = 130 + Math.floor(rand() * 90)   // 130–220
-    const pg = 10  + Math.floor(rand() * 55)    // 10–65
-    const pb = 195 + Math.floor(rand() * 60)    // 195–255
-    out.push({
-      theta:  th,
-      sinPhi: rr,
-      cosPhi: y,
-      r: pr, g: pg, b: pb,
-      size: 0.7 + rand() * 1.5,
-      ts:   rand() * Math.PI * 2,
-      tp:   rand() * Math.PI * 2,
-    })
-  }
-  return out
-})()
-
-// 12 thin plasma tendrils
-const TENDRILS = [
-  { phase: 0.00, speed: 0.31, r: 205, g: 55,  b: 255, width: 2.5 },
-  { phase: 1.05, speed: 0.26, r: 245, g: 22,  b: 222, width: 2.0 },
-  { phase: 2.10, speed: 0.38, r: 165, g: 35,  b: 255, width: 2.8 },
-  { phase: 3.14, speed: 0.22, r: 255, g: 85,  b: 212, width: 1.8 },
-  { phase: 0.52, speed: 0.44, r: 182, g: 22,  b: 248, width: 2.2 },
-  { phase: 1.57, speed: 0.29, r: 222, g: 12,  b: 255, width: 2.8 },
-  { phase: 2.62, speed: 0.35, r: 255, g: 42,  b: 202, width: 2.0 },
-  { phase: 3.67, speed: 0.41, r: 142, g: 62,  b: 255, width: 3.2 },
-  { phase: 0.26, speed: 0.27, r: 202, g: 32,  b: 242, width: 2.3 },
-  { phase: 1.31, speed: 0.33, r: 255, g: 62,  b: 232, width: 1.7 },
-  { phase: 2.36, speed: 0.48, r: 172, g: 42,  b: 255, width: 2.5 },
-  { phase: 4.19, speed: 0.24, r: 242, g: 22,  b: 248, width: 2.0 },
+// ── 8 thick plasma ribbon streams ─────────────────────────────────────────────
+// Each sweeps ~3 revolutions inside the sphere → chaotic loop pattern
+const PLASMAS = [
+  { phase: 0.00, speed: 0.19, r: 218, g: 38,  b: 255, width: 18, loops: 3.2 },
+  { phase: 1.10, speed: 0.15, r: 255, g: 62,  b: 228, width: 22, loops: 2.8 },
+  { phase: 2.20, speed: 0.23, r: 188, g: 28,  b: 255, width: 14, loops: 3.7 },
+  { phase: 3.30, speed: 0.18, r: 240, g: 82,  b: 255, width: 17, loops: 2.5 },
+  { phase: 0.55, speed: 0.26, r: 255, g: 48,  b: 210, width: 12, loops: 3.4 },
+  { phase: 1.65, speed: 0.13, r: 198, g: 18,  b: 255, width: 20, loops: 3.0 },
+  { phase: 2.75, speed: 0.30, r: 255, g: 88,  b: 242, width: 13, loops: 2.6 },
+  { phase: 4.40, speed: 0.16, r: 208, g: 44,  b: 255, width: 16, loops: 3.8 },
 ]
 
-const BEAM_ANGLES = [0.12, 1.10, 1.88, 2.72, 3.48, 4.32]
+// ── 700 surface sparkle particles (Fibonacci sphere) ─────────────────────────
+const PARTICLES = (() => {
+  const phi = Math.PI * (3 - Math.sqrt(5))
+  let s = 0.618033988
+  const rng = () => { s = (s * 9301 + 49297) % 233280; return s / 233280 }
+  return Array.from({ length: 700 }, (_, i) => {
+    const y  = 1 - (i / 699) * 2
+    const sr = Math.sqrt(Math.max(0, 1 - y * y))
+    const th = phi * i
+    return {
+      theta: th, sinPhi: sr, cosPhi: y,
+      r: 200 + Math.floor(rng() * 55),
+      g: 30  + Math.floor(rng() * 60),
+      b: 210 + Math.floor(rng() * 45),
+      size: 0.5 + rng() * 1.8,
+      ts: rng() * Math.PI * 2,
+      tp: rng() * Math.PI * 2,
+      // some particles are white flashes
+      white: rng() > 0.82,
+    }
+  })
+})()
+
+// ── 8 equatorial energy beam bundles ─────────────────────────────────────────
+const BEAM_ANGLES = [0.18, 0.95, 1.72, 2.20, 2.88, 3.55, 4.28, 5.05]
 
 interface SP { sm: number; gm: number; rr: number; rg: number; rb: number }
 const STATE_P: Record<AssistantState, SP> = {
-  idle:       { sm: 0.70, gm: 1.00, rr: 95,  rg: 30,  rb: 220 },
-  wake:       { sm: 0.90, gm: 1.15, rr: 115, rg: 45,  rb: 235 },
-  listening:  { sm: 1.60, gm: 1.45, rr: 255, rg: 45,  rb: 156 },
-  processing: { sm: 2.00, gm: 1.55, rr: 0,   rg: 212, rb: 255 },
-  speaking:   { sm: 2.50, gm: 1.95, rr: 200, rg: 118, rb: 255 },
-  error:      { sm: 1.80, gm: 1.60, rr: 255, rg: 68,  rb: 68  },
+  idle:       { sm: 0.65, gm: 1.00, rr: 92,  rg: 28,  rb: 218 },
+  wake:       { sm: 0.85, gm: 1.18, rr: 112, rg: 44,  rb: 235 },
+  listening:  { sm: 1.65, gm: 1.50, rr: 255, rg: 45,  rb: 155 },
+  processing: { sm: 2.10, gm: 1.60, rr: 0,   rg: 210, rb: 255 },
+  speaking:   { sm: 2.60, gm: 2.05, rr: 200, rg: 115, rb: 255 },
+  error:      { sm: 1.85, gm: 1.65, rr: 255, rg: 65,  rb: 65  },
 }
 
 export default function JarvisOrb({ state, onClick, isSupported }: Props) {
@@ -86,7 +66,7 @@ export default function JarvisOrb({ state, onClick, isSupported }: Props) {
   const rafRef    = useRef<number>(0)
   const tRef      = useRef(0)
   const stateRef  = useRef(state)
-  const jigRef    = useRef<Jiggle>({ dx: 0, dy: 0, vx: 0, vy: 0, inside: false })
+  const jigRef    = useRef<Jiggle>({ dx: 0, dy: 0, vx: 0, vy: 0 })
 
   useEffect(() => { stateRef.current = state }, [state])
 
@@ -95,126 +75,154 @@ export default function JarvisOrb({ state, onClick, isSupported }: Props) {
     if (!canvas) return
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
 
-    const W = 360, H = 360
-    const cx = 180, cy = 180, R = 115
+    const W = 380, H = 380, cx = 190, cy = 190, R = 142
 
     const onMove = (e: MouseEvent) => {
-      const rect  = canvas.getBoundingClientRect()
-      const scale = W / rect.width
-      const mx    = (e.clientX - rect.left) * scale
-      const my    = (e.clientY - rect.top)  * scale
-      const dist  = Math.sqrt((mx - cx) ** 2 + (my - cy) ** 2)
-      const j     = jigRef.current
-      j.inside = dist < R * 1.1
+      const rect = canvas.getBoundingClientRect()
+      const mx   = (e.clientX - rect.left) * (W / rect.width)
+      const my   = (e.clientY - rect.top)  * (H / rect.height)
+      const dist = Math.hypot(mx - cx, my - cy)
       if (dist < R) {
-        j.vx += ((mx - cx) / R) * 2.4
-        j.vy += ((my - cy) / R) * 2.4
+        jigRef.current.vx += ((mx - cx) / R) * 2.8
+        jigRef.current.vy += ((my - cy) / R) * 2.8
       }
     }
-    const onLeave = () => { jigRef.current.inside = false }
     canvas.addEventListener('mousemove', onMove)
-    canvas.addEventListener('mouseleave', onLeave)
 
-    // ── Draw helpers ──────────────────────────────────────────────────────────
+    // ── Build 80-point plasma spline path ────────────────────────────────────
+    function buildPlasmaPath(
+      phase: number, speed: number, loops: number,
+      t: number, sm: number, j: Jiggle
+    ): [number, number][] {
+      const N = 80
+      const pts: [number, number][] = []
+      const p = phase, s = speed
+      for (let i = 0; i <= N; i++) {
+        const u     = i / N
+        const sweep = u * Math.PI * 2 * loops + p
 
-    function drawBeams(t: number, rr: number, rg: number, rb: number, gm: number) {
-      const spread = 0.022
-      for (const angle of BEAM_ANGLES) {
-        const len = R * (1.80 + Math.sin(t * 0.65 + angle) * 0.28)
-        for (let k = -2; k <= 2; k++) {
-          const a   = angle + k * spread
-          const x1  = cx + Math.cos(a) * (R + 1)
-          const y1  = cy + Math.sin(a) * (R + 1)
-          const x2  = cx + Math.cos(a) * (R + len)
-          const y2  = cy + Math.sin(a) * (R + len)
-          const grad = ctx.createLinearGradient(x1, y1, x2, y2)
-          const alpha = (0.28 - Math.abs(k) * 0.07) * gm
-          grad.addColorStop(0,   `rgba(${rr},${rg},${rb},${alpha})`)
-          grad.addColorStop(0.4, `rgba(${rr},${rg},${rb},${alpha * 0.45})`)
-          grad.addColorStop(1,   `rgba(${rr},${rg},${rb},0)`)
-          ctx.beginPath()
-          ctx.moveTo(x1, y1)
-          ctx.lineTo(x2, y2)
-          ctx.strokeStyle = grad
-          ctx.lineWidth   = k === 0 ? 1.6 : 0.7
-          ctx.stroke()
-        }
+        // Radius: oscillates between ~0.18R and ~0.90R
+        const rad = R * Math.max(0.10, Math.min(0.91,
+          0.58
+          + Math.sin(sweep * 0.88 + t * s * sm * 1.10 + p      ) * 0.23
+          + Math.cos(sweep * 1.42 + t * s * sm * 0.72 + p * 1.3) * 0.15
+          + Math.sin(sweep * 2.18 + t * s * sm * 0.44 + p * 0.7) * 0.09
+        ))
+
+        // Angular wobble — creates the crossing-over loop shapes
+        const wobble =
+          Math.sin(sweep * 0.62 + t * s * sm * 0.88 + p * 0.9) * 0.82
+          + Math.cos(sweep * 1.21 + t * s * sm * 0.55 + p * 1.4) * 0.52
+
+        const a = sweep + wobble
+        pts.push([
+          cx + Math.cos(a) * rad + j.dx * 0.28,
+          cy + Math.sin(a) * rad + j.dy * 0.28,
+        ])
       }
+      return pts
     }
 
+    // ── Draw spline as smooth quadratic bezier chain ──────────────────────────
+    function strokeSpline(pts: [number, number][]) {
+      ctx.beginPath()
+      ctx.moveTo(pts[0][0], pts[0][1])
+      for (let i = 1; i < pts.length - 1; i++) {
+        const mx = (pts[i][0] + pts[i + 1][0]) * 0.5
+        const my = (pts[i][1] + pts[i + 1][1]) * 0.5
+        ctx.quadraticCurveTo(pts[i][0], pts[i][1], mx, my)
+      }
+      const last = pts[pts.length - 1]
+      ctx.lineTo(last[0], last[1])
+    }
+
+    function drawPlasmaPaths(t: number, sm: number, gm: number, j: Jiggle) {
+      ctx.globalCompositeOperation = 'screen'
+      ctx.lineCap = 'round'
+      for (const pl of PLASMAS) {
+        const { phase, speed, loops, r, g: gv, b, width } = pl
+        const pts = buildPlasmaPath(phase, speed, loops, t, sm, j)
+
+        // Pass 1 – wide outer glow
+        strokeSpline(pts)
+        ctx.strokeStyle = `rgba(${r},${gv},${b},${0.07 * gm})`
+        ctx.lineWidth   = width * 7
+        ctx.stroke()
+
+        // Pass 2 – mid glow
+        strokeSpline(pts)
+        ctx.strokeStyle = `rgba(${r},${gv},${b},${0.22 * gm})`
+        ctx.lineWidth   = width * 2.4
+        ctx.stroke()
+
+        // Pass 3 – bright neon core
+        strokeSpline(pts)
+        const cr = Math.min(255, r + 45)
+        const cg = Math.min(255, gv + 55)
+        const cb = Math.min(255, b + 30)
+        ctx.strokeStyle = `rgba(${cr},${cg},${cb},${0.78 * gm})`
+        ctx.lineWidth   = width * 0.30
+        ctx.stroke()
+      }
+      ctx.globalCompositeOperation = 'source-over'
+    }
+
+    // ── Surface sparkle particles ─────────────────────────────────────────────
     function drawParticles(t: number, sm: number, gm: number, j: Jiggle) {
-      const rot = t * 0.055 * sm
+      const rot = t * 0.045 * sm
       ctx.globalCompositeOperation = 'screen'
       for (const p of PARTICLES) {
-        const theta  = p.theta + rot
-        const px3    = p.sinPhi * Math.cos(theta)
-        const py3    = p.cosPhi
-        const pz3    = p.sinPhi * Math.sin(theta)
+        const theta = p.theta + rot
+        const px3   = p.sinPhi * Math.cos(theta)
+        const py3   = p.cosPhi
+        const pz3   = p.sinPhi * Math.sin(theta)
+        if (pz3 < -0.10) continue
 
-        // Skip back hemisphere (facing away)
-        if (pz3 < -0.12) continue
+        const sx = cx + px3 * R * 0.97 + j.dx * 0.15
+        const sy = cy + py3 * R * 0.97 + j.dy * 0.15
 
-        const sx = cx + px3 * R * 0.96 + j.dx * 0.18
-        const sy = cy + py3 * R * 0.96 + j.dy * 0.18
+        const twinkle = 0.4 + Math.sin(t * 2.1 + p.ts) * 0.34 + Math.sin(t * 3.6 + p.tp) * 0.26
+        const depth   = 0.30 + pz3 * 0.70
+        const alpha   = Math.min(1, twinkle * depth * gm * 0.85)
+        if (alpha < 0.03) continue
 
-        const twinkle = 0.45 + Math.sin(t * 2.1 + p.ts) * 0.30 + Math.sin(t * 3.7 + p.tp) * 0.25
-        const depth   = 0.35 + pz3 * 0.65
-        const alpha   = Math.min(1, twinkle * depth * gm * 0.72)
-        if (alpha < 0.02) continue
-
-        const sz = Math.max(0.3, p.size * (0.55 + pz3 * 0.55))
+        const sz = Math.max(0.3, p.size * (0.5 + pz3 * 0.6))
         ctx.beginPath()
         ctx.arc(sx, sy, sz, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(${p.r},${p.g},${p.b},${alpha})`
+        ctx.fillStyle = p.white
+          ? `rgba(240,220,255,${alpha * 0.9})`
+          : `rgba(${p.r},${p.g},${p.b},${alpha})`
         ctx.fill()
       }
       ctx.globalCompositeOperation = 'source-over'
     }
 
-    function drawTendrils(t: number, sm: number, gm: number, j: Jiggle) {
-      ctx.globalCompositeOperation = 'screen'
-      ctx.lineCap = 'round'
-      for (const td of TENDRILS) {
-        const { phase: p, speed: s, r, g: gv, b, width } = td
-        const startA = p + t * s * sm * 0.42
-        const endA   = startA + Math.PI + Math.sin(t * s * 0.6 + p) * 0.55
-
-        const wave1 = 0.80 + Math.sin(t * s * 0.8  + p) * 0.12
-        const wave2 = 0.80 + Math.cos(t * s * 0.75 + p * 1.1) * 0.12
-
-        const x1 = cx + Math.cos(startA) * R * wave1 + j.dx * 0.25
-        const y1 = cy + Math.sin(startA) * R * wave1 + j.dy * 0.25
-        const x2 = cx + Math.cos(endA)   * R * wave2 + j.dx * 0.25
-        const y2 = cy + Math.sin(endA)   * R * wave2 + j.dy * 0.25
-
-        // Control point orbits the center
-        const cpA = startA + Math.PI * 0.5 + t * s * 0.55
-        const cpR = R * (0.22 + Math.abs(Math.sin(t * s * 0.45 + p)) * 0.30)
-        const cpx = cx + Math.cos(cpA) * cpR
-        const cpy = cy + Math.sin(cpA) * cpR
-
-        const alpha = (0.32 + Math.sin(t * s * 0.9 + p) * 0.14) * gm
-
-        // Glow pass
-        ctx.beginPath()
-        ctx.moveTo(x1, y1)
-        ctx.quadraticCurveTo(cpx, cpy, x2, y2)
-        ctx.strokeStyle = `rgba(${r},${gv},${b},${alpha * 0.28})`
-        ctx.lineWidth   = width * 4.5
-        ctx.stroke()
-
-        // Core pass
-        ctx.beginPath()
-        ctx.moveTo(x1, y1)
-        ctx.quadraticCurveTo(cpx, cpy, x2, y2)
-        ctx.strokeStyle = `rgba(${r},${gv},${b},${alpha})`
-        ctx.lineWidth   = width
-        ctx.stroke()
+    // ── Outward energy beams (after sphere restore) ───────────────────────────
+    function drawBeams(t: number, sm: number, rr: number, rg: number, rb: number, gm: number) {
+      for (const angle of BEAM_ANGLES) {
+        const len    = R * (1.65 + Math.sin(t * 0.7 + angle) * 0.30)
+        const spread = 0.018
+        for (let k = -2; k <= 2; k++) {
+          const a    = angle + k * spread
+          const x1   = cx + Math.cos(a) * (R + 2)
+          const y1   = cy + Math.sin(a) * (R + 2)
+          const x2   = cx + Math.cos(a) * (R + len)
+          const y2   = cy + Math.sin(a) * (R + len)
+          const grad = ctx.createLinearGradient(x1, y1, x2, y2)
+          const a0   = (0.30 - Math.abs(k) * 0.07) * gm
+          grad.addColorStop(0,    `rgba(${rr},${rg},${rb},${a0})`)
+          grad.addColorStop(0.35, `rgba(${rr},${rg},${rb},${a0 * 0.50})`)
+          grad.addColorStop(1,    `rgba(${rr},${rg},${rb},0)`)
+          ctx.beginPath()
+          ctx.moveTo(x1, y1); ctx.lineTo(x2, y2)
+          ctx.strokeStyle = grad
+          ctx.lineWidth   = k === 0 ? 1.4 : 0.6
+          ctx.stroke()
+        }
       }
-      ctx.globalCompositeOperation = 'source-over'
     }
 
-    // ── Frame loop ─────────────────────────────────────────────────────────────
+    // ── Main draw loop ────────────────────────────────────────────────────────
     function drawFrame() {
       const t = tRef.current
       const s = stateRef.current
@@ -224,70 +232,70 @@ export default function JarvisOrb({ state, onClick, isSupported }: Props) {
       // Spring physics
       j.vx -= j.dx * 0.10; j.vy -= j.dy * 0.10
       j.dx += j.vx;        j.dy += j.vy
-      j.vx *= 0.87;        j.vy *= 0.87
+      j.vx *= 0.86;        j.vy *= 0.86
 
       ctx.clearRect(0, 0, W, H)
 
-      // 1. Ambient outer glow
-      const og = ctx.createRadialGradient(cx, cy, R * 0.72, cx, cy, R * 2.05)
-      og.addColorStop(0,   `rgba(${rr},${rg},${rb},${0.24 * gm})`)
-      og.addColorStop(0.3, `rgba(${rr},${rg},${rb},${0.10 * gm})`)
-      og.addColorStop(0.6, `rgba(${rr},${rg},${rb},${0.03 * gm})`)
+      // 1 – Outer atmospheric glow
+      const og = ctx.createRadialGradient(cx, cy, R * 0.70, cx, cy, R * 2.10)
+      og.addColorStop(0,   `rgba(${rr},${rg},${rb},${0.28 * gm})`)
+      og.addColorStop(0.3, `rgba(${rr},${rg},${rb},${0.12 * gm})`)
+      og.addColorStop(0.6, `rgba(${rr},${rg},${rb},${0.04 * gm})`)
       og.addColorStop(1,   'rgba(0,0,0,0)')
       ctx.fillStyle = og
       ctx.fillRect(0, 0, W, H)
 
-      // 2. Sphere (clipped)
+      // 2 – Sphere clip region
       ctx.save()
       ctx.beginPath()
-      ctx.arc(cx + j.dx * 0.15, cy + j.dy * 0.15, R, 0, Math.PI * 2)
+      ctx.arc(cx + j.dx * 0.12, cy + j.dy * 0.12, R, 0, Math.PI * 2)
       ctx.clip()
 
-      // Base fill: deep purple-black
-      const bg = ctx.createRadialGradient(cx - R*0.18, cy - R*0.18, 0, cx, cy, R)
-      bg.addColorStop(0,    '#26004e')
-      bg.addColorStop(0.32, '#150030')
-      bg.addColorStop(0.68, '#08001c')
-      bg.addColorStop(1,    '#030008')
+      // Base fill — deep purple-black glass
+      const bg = ctx.createRadialGradient(cx - R * 0.16, cy - R * 0.16, 0, cx, cy, R)
+      bg.addColorStop(0,   '#2a0052')
+      bg.addColorStop(0.3, '#180038')
+      bg.addColorStop(0.7, '#0a001e')
+      bg.addColorStop(1,   '#040008')
       ctx.fillStyle = bg
       ctx.fillRect(cx - R - 20, cy - R - 20, R * 2 + 40, R * 2 + 40)
 
-      // Inner energy core (breathes)
-      const breathe = 0.28 + Math.sin(t * 1.4 * sm) * 0.07
+      // Breathing energy core
+      const breathe = 0.30 + Math.sin(t * 1.35 * sm) * 0.07
       const core    = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * breathe)
-      core.addColorStop(0,   `rgba(${rr},${rg},${rb},0.35)`)
-      core.addColorStop(0.4, `rgba(${rr},${rg},${rb},0.12)`)
+      core.addColorStop(0,   `rgba(${rr},${rg},${rb},0.40)`)
+      core.addColorStop(0.4, `rgba(${rr},${rg},${rb},0.15)`)
       core.addColorStop(1,   'rgba(0,0,0,0)')
       ctx.fillStyle = core
       ctx.fillRect(cx - R - 20, cy - R - 20, R * 2 + 40, R * 2 + 40)
 
-      // Particle dust field
+      // Thick plasma ribbon streams
+      drawPlasmaPaths(t, sm, gm, j)
+
+      // Surface sparkle
       drawParticles(t, sm, gm, j)
 
-      // Plasma tendrils
-      drawTendrils(t, sm, gm, j)
-
-      // Dark glass center reflection
-      const darkC = ctx.createRadialGradient(cx - R*0.06, cy - R*0.06, 0, cx, cy, R * 0.50)
-      darkC.addColorStop(0,   'rgba(0,0,0,0.50)')
-      darkC.addColorStop(0.5, 'rgba(0,0,0,0.26)')
+      // Dark glass center reflection (sells the 3D glass look)
+      const darkC = ctx.createRadialGradient(cx - R * 0.05, cy - R * 0.08, 0, cx, cy, R * 0.52)
+      darkC.addColorStop(0,   'rgba(0,0,0,0.62)')
+      darkC.addColorStop(0.4, 'rgba(0,0,0,0.35)')
       darkC.addColorStop(1,   'rgba(0,0,0,0)')
       ctx.fillStyle = darkC
       ctx.fillRect(cx - R - 20, cy - R - 20, R * 2 + 40, R * 2 + 40)
 
-      // Edge vignette
-      const vig = ctx.createRadialGradient(cx, cy, R * 0.44, cx, cy, R)
+      // Edge vignette — makes sphere feel thick/solid
+      const vig = ctx.createRadialGradient(cx, cy, R * 0.42, cx, cy, R)
       vig.addColorStop(0,    'rgba(0,0,0,0)')
-      vig.addColorStop(0.52, 'rgba(0,0,0,0.06)')
-      vig.addColorStop(0.80, 'rgba(0,0,0,0.52)')
-      vig.addColorStop(1,    'rgba(0,0,0,0.96)')
+      vig.addColorStop(0.50, 'rgba(0,0,0,0.08)')
+      vig.addColorStop(0.80, 'rgba(0,0,0,0.55)')
+      vig.addColorStop(1,    'rgba(0,0,0,0.97)')
       ctx.fillStyle = vig
       ctx.fillRect(cx - R - 20, cy - R - 20, R * 2 + 40, R * 2 + 40)
 
-      // Glass specular (upper-left)
-      const spec = ctx.createRadialGradient(cx - R*0.38, cy - R*0.42, 0, cx - R*0.26, cy - R*0.30, R * 0.52)
-      spec.addColorStop(0,    'rgba(255,255,255,0.26)')
-      spec.addColorStop(0.30, 'rgba(255,255,255,0.09)')
+      // Glass specular highlight — upper left
+      const spec = ctx.createRadialGradient(cx - R * 0.36, cy - R * 0.40, 0, cx - R * 0.24, cy - R * 0.28, R * 0.50)
+      spec.addColorStop(0,    'rgba(255,255,255,0.28)')
+      spec.addColorStop(0.30, 'rgba(255,255,255,0.10)')
       spec.addColorStop(0.65, 'rgba(255,255,255,0.02)')
       spec.addColorStop(1,    'rgba(255,255,255,0)')
       ctx.fillStyle = spec
@@ -295,60 +303,53 @@ export default function JarvisOrb({ state, onClick, isSupported }: Props) {
 
       ctx.restore()
 
-      // 3. Outward energy beams
-      drawBeams(t * sm, rr, rg, rb, gm)
+      // 3 – Outward energy beams
+      drawBeams(t, sm, rr, rg, rb, gm)
 
-      // 4. Rim lighting
-      const rimH = ctx.createRadialGradient(cx, cy, R * 0.82, cx, cy, R * 1.22)
+      // 4 – Rim lighting (critical for 3D depth)
+      const rimH = ctx.createRadialGradient(cx, cy, R * 0.80, cx, cy, R * 1.24)
       rimH.addColorStop(0,   'rgba(0,0,0,0)')
-      rimH.addColorStop(0.5, `rgba(${rr},${rg},${rb},${0.28 * gm})`)
+      rimH.addColorStop(0.5, `rgba(${rr},${rg},${rb},${0.32 * gm})`)
       rimH.addColorStop(1,   'rgba(0,0,0,0)')
       ctx.fillStyle = rimH
-      ctx.beginPath(); ctx.arc(cx, cy, R * 1.22, 0, Math.PI * 2); ctx.fill()
+      ctx.beginPath(); ctx.arc(cx, cy, R * 1.24, 0, Math.PI * 2); ctx.fill()
 
-      for (let i = 4; i >= 0; i--) {
+      for (let i = 5; i >= 0; i--) {
         ctx.beginPath()
-        ctx.arc(cx, cy, R + i * 2.0, 0, Math.PI * 2)
-        ctx.strokeStyle = `rgba(${rr},${rg},${rb},${(0.44 - i * 0.08) * gm})`
-        ctx.lineWidth   = 1.8 - i * 0.30
+        ctx.arc(cx, cy, R + i * 1.8, 0, Math.PI * 2)
+        ctx.strokeStyle = `rgba(${rr},${rg},${rb},${(0.48 - i * 0.08) * gm})`
+        ctx.lineWidth   = 1.8 - i * 0.28
         ctx.stroke()
       }
-      ctx.beginPath()
-      ctx.arc(cx, cy, R - 0.5, 0, Math.PI * 2)
-      ctx.strokeStyle = `rgba(255,255,255,${0.18 * gm})`
-      ctx.lineWidth   = 0.8
-      ctx.stroke()
+      // Inner bright glass edge
+      ctx.beginPath(); ctx.arc(cx, cy, R - 0.5, 0, Math.PI * 2)
+      ctx.strokeStyle = `rgba(255,255,255,${0.22 * gm})`
+      ctx.lineWidth   = 0.9; ctx.stroke()
 
-      // 5. State effects
+      // 5 – State effects
       if (s === 'listening') {
         for (let k = 0; k < 3; k++) {
           const prog = ((t * sm * 0.38 + k * 0.33) % 1)
-          ctx.beginPath()
-          ctx.arc(cx, cy, R * (1.02 + prog * 0.82), 0, Math.PI * 2)
-          ctx.strokeStyle = `rgba(255,45,156,${(1 - prog) * 0.36})`
-          ctx.lineWidth   = 1.2
-          ctx.stroke()
+          ctx.beginPath(); ctx.arc(cx, cy, R * (1.02 + prog * 0.85), 0, Math.PI * 2)
+          ctx.strokeStyle = `rgba(255,45,156,${(1 - prog) * 0.38})`
+          ctx.lineWidth   = 1.2; ctx.stroke()
         }
       }
       if (s === 'speaking') {
-        const pa = (Math.sin(t * 9.5 * sm) + 1) * 0.5 * 0.55
-        ctx.beginPath()
-        ctx.arc(cx, cy, R * (1.02 + 0.05 * Math.sin(t * 9.5 * sm)), 0, Math.PI * 2)
-        ctx.strokeStyle = `rgba(200,120,255,${pa})`
-        ctx.lineWidth   = 2.8
-        ctx.stroke()
+        const pa = (Math.sin(t * 9 * sm) + 1) * 0.5 * 0.58
+        ctx.beginPath(); ctx.arc(cx, cy, R * (1.02 + 0.055 * Math.sin(t * 9 * sm)), 0, Math.PI * 2)
+        ctx.strokeStyle = `rgba(210,120,255,${pa})`
+        ctx.lineWidth   = 3.0; ctx.stroke()
       }
 
-      // 6. Holographic ground shadow
+      // 6 – Holographic ground shadow
       ctx.save()
-      ctx.translate(cx, cy + R * 1.58)
-      ctx.scale(1, 0.08)
-      for (let i = 0; i < 4; i++) {
-        ctx.beginPath()
-        ctx.arc(0, 0, R * (0.40 + i * 0.16), 0, Math.PI * 2)
-        ctx.strokeStyle = `rgba(${rr},${rg},${rb},${(0.18 - i * 0.038) * gm})`
-        ctx.lineWidth   = 1.0 - i * 0.20
-        ctx.stroke()
+      ctx.translate(cx, cy + R * 1.60)
+      ctx.scale(1, 0.07)
+      for (let i = 0; i < 5; i++) {
+        ctx.beginPath(); ctx.arc(0, 0, R * (0.38 + i * 0.15), 0, Math.PI * 2)
+        ctx.strokeStyle = `rgba(${rr},${rg},${rb},${(0.20 - i * 0.036) * gm})`
+        ctx.lineWidth   = 1.0 - i * 0.17; ctx.stroke()
       }
       ctx.restore()
 
@@ -360,34 +361,32 @@ export default function JarvisOrb({ state, onClick, isSupported }: Props) {
     return () => {
       cancelAnimationFrame(rafRef.current)
       canvas.removeEventListener('mousemove', onMove)
-      canvas.removeEventListener('mouseleave', onLeave)
     }
   }, [])
 
   const icon = () => {
-    if (!isSupported) return <MicOff style={{ width: 26, height: 26, color: '#64748b' }} />
+    if (!isSupported) return <MicOff style={{ width: 28, height: 28, color: '#4a4060' }} />
     switch (state) {
-      case 'listening':  return <Mic     style={{ width: 26, height: 26, color: '#ffe0f5', filter: 'drop-shadow(0 0 8px rgba(255,45,156,0.9))' }} />
-      case 'processing': return <Loader2 style={{ width: 26, height: 26, color: '#e8d0ff', filter: 'drop-shadow(0 0 8px rgba(140,80,255,0.9))' }} className="animate-spin" />
-      case 'wake':       return <Radio   style={{ width: 26, height: 26, color: '#ded0ff', filter: 'drop-shadow(0 0 6px rgba(130,70,255,0.8))' }} />
-      case 'speaking':   return <Radio   style={{ width: 26, height: 26, color: '#f0d8ff', filter: 'drop-shadow(0 0 8px rgba(200,120,255,0.9))' }} />
-      default:           return <Mic     style={{ width: 26, height: 26, color: '#d0c8ff', filter: 'drop-shadow(0 0 5px rgba(110,55,255,0.7))' }} />
+      case 'listening':  return <Mic     style={{ width: 28, height: 28, color: '#ffe0f5', filter: 'drop-shadow(0 0 9px rgba(255,45,156,1))' }} />
+      case 'processing': return <Loader2 style={{ width: 28, height: 28, color: '#ecd8ff', filter: 'drop-shadow(0 0 9px rgba(160,80,255,1))' }} className="animate-spin" />
+      case 'wake':       return <Radio   style={{ width: 28, height: 28, color: '#dcd0ff', filter: 'drop-shadow(0 0 7px rgba(140,80,255,0.9))' }} />
+      case 'speaking':   return <Radio   style={{ width: 28, height: 28, color: '#f2d8ff', filter: 'drop-shadow(0 0 9px rgba(210,120,255,1))' }} />
+      default:           return <Mic     style={{ width: 28, height: 28, color: '#ccc0f0', filter: 'drop-shadow(0 0 6px rgba(120,60,255,0.8))' }} />
     }
   }
 
   return (
-    <div className="relative select-none" style={{ animation: 'float 5s ease-in-out infinite' }}>
+    <div
+      className="relative select-none"
+      style={{ animation: 'float 4s ease-in-out infinite', filter: 'drop-shadow(0 40px 60px rgba(100,20,255,0.35))' }}
+    >
       <button
         onClick={isSupported ? onClick : undefined}
         disabled={!isSupported}
-        className="block p-0 bg-transparent border-0 outline-none rounded-full focus-visible:ring-2 focus-visible:ring-purple-500/60"
-        style={{ cursor: isSupported ? 'pointer' : 'not-allowed', opacity: isSupported ? 1 : 0.45, transition: 'transform 0.15s ease' }}
-        onMouseEnter={e => { if (isSupported) (e.currentTarget as HTMLElement).style.transform = 'scale(1.03)' }}
-        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'scale(1)' }}
-        onMouseDown={e  => { if (isSupported) (e.currentTarget as HTMLElement).style.transform = 'scale(0.97)' }}
-        onMouseUp={e    => { if (isSupported) (e.currentTarget as HTMLElement).style.transform = 'scale(1.03)' }}
+        className="block p-0 bg-transparent border-0 outline-none rounded-full"
+        style={{ cursor: isSupported ? 'pointer' : 'not-allowed', opacity: isSupported ? 1 : 0.45 }}
         aria-label={
-          !isSupported       ? 'Voice requires Chrome or Edge'
+          !isSupported            ? 'Voice requires Chrome or Edge'
           : state === 'listening' ? 'Stop listening'
           : state === 'speaking'  ? 'Stop speaking'
           : 'Activate Jarvis'
@@ -395,9 +394,9 @@ export default function JarvisOrb({ state, onClick, isSupported }: Props) {
       >
         <canvas
           ref={canvasRef}
-          width={360}
-          height={360}
-          style={{ display: 'block', width: 'min(360px, calc(100vw - 48px))', height: 'auto' }}
+          width={380}
+          height={380}
+          style={{ display: 'block', width: 'min(380px, calc(100vw - 48px))', height: 'auto' }}
         />
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           {icon()}
@@ -407,7 +406,7 @@ export default function JarvisOrb({ state, onClick, isSupported }: Props) {
       {!isSupported && (
         <div
           className="absolute bottom-10 left-1/2 -translate-x-1/2 text-[10px] tracking-widest uppercase px-3 py-1 rounded-full pointer-events-none whitespace-nowrap"
-          style={{ background: 'rgba(5,0,18,0.9)', border: '1px solid rgba(130,60,255,0.25)', color: 'rgba(170,130,255,0.65)' }}
+          style={{ background: 'rgba(5,0,18,0.92)', border: '1px solid rgba(130,60,255,0.28)', color: 'rgba(180,140,255,0.68)' }}
         >
           Chrome / Edge required
         </div>

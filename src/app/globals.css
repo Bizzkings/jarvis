@@ -134,8 +134,8 @@
 /* Orb floating up and down */
 @keyframes float {
   0%, 100% { transform: translateY(0px)   rotate(0deg); }
-  40%       { transform: translateY(-18px) rotate(0.8deg); }
-  70%       { transform: translateY(-10px) rotate(-0.5deg); }
+  40%       { transform: translateY(-26px) rotate(1.0deg); }
+  70%       { transform: translateY(-14px) rotate(-0.6deg); }
 }
 
 /* Orb vibrating when speaking */
