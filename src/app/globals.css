@@ -197,6 +197,12 @@
   50%       { box-shadow: 0 0 10px #00d4ff, 0 0 20px rgba(0,212,255,0.4); }
 }
 
+/* Platform panel glow pulse */
+@keyframes platform-glow {
+  0%, 100% { opacity: 0.6; }
+  50%       { opacity: 1.0; }
+}
+
 /* Thin scrollbar for transcript */
 .scrollbar-thin { scrollbar-width: thin; }
 ::-webkit-scrollbar { width: 4px; height: 4px; }

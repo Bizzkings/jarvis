@@ -19,12 +19,12 @@ export default function WaveformBars({ active }: Props) {
                   height: 4,
                   animation: `waveform 0.6s ease-in-out infinite`,
                   animationDelay: delay,
-                  background: `linear-gradient(to top, #00d4ff, #7b2fff)`,
-                  boxShadow: '0 0 6px rgba(0,212,255,0.6)',
+                  background: `linear-gradient(to top, #7b2fff, #c77dff)`,
+                  boxShadow: '0 0 6px rgba(160,80,255,0.65)',
                 }
               : {
                   height: 4,
-                  background: 'rgba(0,180,255,0.18)',
+                  background: 'rgba(120,55,200,0.20)',
                 }
           }
         />

@@ -157,11 +157,11 @@ export default function JarvisCore() {
 
   const statusColor =
     assistantState === 'listening'  ? '#ff2d9c' :
-    assistantState === 'processing' ? '#00d4ff' :
+    assistantState === 'processing' ? '#a78bfa' :
     assistantState === 'speaking'   ? '#c77dff' :
-    assistantState === 'wake'       ? '#00d4ff' :
+    assistantState === 'wake'       ? '#9d4edd' :
     assistantState === 'error'      ? '#ff4444' :
-    'rgba(0,180,255,0.4)'
+    'rgba(140,80,255,0.45)'
 
   return (
     <div className="flex flex-col items-center gap-6 w-full z-10">
@@ -172,18 +172,18 @@ export default function JarvisCore() {
           onClick={toggleAlwaysListen}
           className="flex items-center gap-2 px-4 py-1.5 rounded-full text-xs tracking-widest uppercase transition-all duration-300"
           style={{
-            background: alwaysListen ? 'rgba(0,212,255,0.12)' : 'rgba(255,255,255,0.03)',
-            border: `1px solid ${alwaysListen ? 'rgba(0,212,255,0.38)' : 'rgba(0,180,255,0.1)'}`,
-            color: alwaysListen ? '#00d4ff' : 'rgba(0,160,220,0.45)',
-            boxShadow: alwaysListen ? '0 0 15px rgba(0,212,255,0.15)' : 'none',
+            background: alwaysListen ? 'rgba(130,60,255,0.12)' : 'rgba(255,255,255,0.03)',
+            border: `1px solid ${alwaysListen ? 'rgba(140,70,255,0.40)' : 'rgba(120,60,220,0.12)'}`,
+            color: alwaysListen ? '#b57bff' : 'rgba(140,90,220,0.48)',
+            boxShadow: alwaysListen ? '0 0 15px rgba(130,60,255,0.18)' : 'none',
           }}
         >
           <span
             className="w-1.5 h-1.5 rounded-full"
             style={{
-              background: alwaysListen ? '#00d4ff' : 'rgba(0,180,255,0.25)',
-              boxShadow: alwaysListen ? '0 0 6px #00d4ff' : 'none',
-              animation: alwaysListen ? 'pulse-cyan 1.5s ease-in-out infinite' : 'none',
+              background: alwaysListen ? '#9d4edd' : 'rgba(120,60,200,0.28)',
+              boxShadow: alwaysListen ? '0 0 6px #9d4edd' : 'none',
+              animation: alwaysListen ? 'pulse-purple 1.5s ease-in-out infinite' : 'none',
             }}
           />
           {alwaysListen ? 'HEY JARVIS ON' : 'ENABLE HEY JARVIS'}

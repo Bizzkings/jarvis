@@ -18,7 +18,7 @@ export default function TranscriptDisplay({ entries }: Props) {
     return (
       <p
         className="text-[10px] tracking-[0.25em] uppercase py-4"
-        style={{ color: 'rgba(0,180,255,0.3)' }}
+        style={{ color: 'rgba(130,70,220,0.38)' }}
       >
         Awaiting voice input...
       </p>
@@ -35,7 +35,7 @@ export default function TranscriptDisplay({ entries }: Props) {
           {entry.role === 'assistant' && entry.agentName && (
             <span
               className="text-[9px] ml-2 tracking-[0.25em] uppercase"
-              style={{ color: 'rgba(0,200,255,0.6)' }}
+              style={{ color: 'rgba(170,110,255,0.72)' }}
             >
               {entry.agentName}
             </span>
@@ -45,16 +45,16 @@ export default function TranscriptDisplay({ entries }: Props) {
             style={
               entry.role === 'user'
                 ? {
-                    background: 'rgba(0, 30, 70, 0.75)',
-                    border: '1px solid rgba(0,212,255,0.2)',
+                    background: 'rgba(28, 0, 58, 0.78)',
+                    border: '1px solid rgba(140,70,255,0.24)',
                     borderTopRightRadius: 4,
-                    color: 'rgba(220,240,255,0.9)',
+                    color: 'rgba(230,215,255,0.92)',
                   }
                 : {
-                    background: 'rgba(0, 10, 35, 0.7)',
-                    border: '1px solid rgba(0,180,255,0.12)',
+                    background: 'rgba(14, 0, 32, 0.72)',
+                    border: '1px solid rgba(110,50,210,0.18)',
                     borderTopLeftRadius: 4,
-                    color: 'rgba(180,220,255,0.75)',
+                    color: 'rgba(200,175,255,0.78)',
                   }
             }
           >
@@ -62,7 +62,7 @@ export default function TranscriptDisplay({ entries }: Props) {
           </div>
           <span
             className="text-[9px] mx-2"
-            style={{ color: 'rgba(0,150,200,0.35)' }}
+            style={{ color: 'rgba(120,60,200,0.40)' }}
           >
             {entry.timestamp.toLocaleTimeString('en-US', {
               hour: 'numeric',
