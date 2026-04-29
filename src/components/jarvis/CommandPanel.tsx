@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, memo } from 'react'
 import type { AssistantState } from '@/lib/assistant/types'
 
 interface Props {
@@ -19,7 +19,7 @@ const QUICK_CMDS = [
 const CLIP_BTN  = 'polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))'
 const CLIP_SEND = 'polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)'
 
-export default function CommandPanel({ onCommand, disabled }: Props) {
+const CommandPanel = memo(function CommandPanel({ onCommand, disabled }: Props) {
   const [input, setInput] = useState('')
   const [clock, setClock] = useState('')
 
@@ -174,4 +174,6 @@ export default function CommandPanel({ onCommand, disabled }: Props) {
       </div>
     </div>
   )
-}
+})
+
+export default CommandPanel

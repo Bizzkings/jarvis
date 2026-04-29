@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import type { AssistantState } from '@/lib/assistant/types'
 
 interface Props {
@@ -16,7 +17,7 @@ const STATUS_MAP: Record<AssistantState, { label: string; sub: string }> = {
   error:      { label: 'JARVIS CORE // ERROR',      sub: 'RECOVERY PROTOCOL ACTIVE'           },
 }
 
-export default function StatusBar({ state, agentName }: Props) {
+const StatusBar = memo(function StatusBar({ state, agentName }: Props) {
   const { label, sub } = STATUS_MAP[state]
 
   return (
@@ -54,4 +55,6 @@ export default function StatusBar({ state, agentName }: Props) {
       </p>
     </div>
   )
-}
+})
+
+export default StatusBar
