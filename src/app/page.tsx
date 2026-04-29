@@ -76,9 +76,6 @@ export default function Home() {
           <h1 style={{ fontFamily: 'var(--font-orbitron)', fontSize: 13, fontWeight: 700, letterSpacing: 10, color: 'rgba(0,200,255,0.65)', textShadow: '0 0 20px rgba(0,180,255,0.3)' }}>
             J · A · R · V · I · S
           </h1>
-          <p style={{ fontFamily: 'var(--font-rajdhani)', fontSize: 10, letterSpacing: 4, color: 'rgba(0,160,200,0.45)', marginTop: 4 }}>
-            ADVANCED REASONING &amp; VISION INTELLIGENCE SYSTEM
-          </p>
         </div>
 
         {/* Left side panel */}

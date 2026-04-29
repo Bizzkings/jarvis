@@ -7,7 +7,6 @@ import { routeCommand } from '@/lib/assistant/commandRouter'
 import type { AssistantState, TranscriptEntry } from '@/lib/assistant/types'
 import JarvisOrb from './JarvisOrb'
 import DataPanel from './DataPanel'
-import TranscriptDisplay from './TranscriptDisplay'
 import StatusBar from './StatusBar'
 import CommandPanel from './CommandPanel'
 
@@ -17,6 +16,8 @@ export default function JarvisCore() {
   const [lastAgentName, setLastAgentName]   = useState<string | null>(null)
   const [lastAgentData, setLastAgentData]   = useState<unknown>(null)
   const [dataPanelVisible, setDataPanelVisible] = useState(false)
+  const [lastResponse, setLastResponse]     = useState<{ text: string; agent: string } | null>(null)
+  const [responseVisible, setResponseVisible] = useState(false)
   const [alwaysListen, setAlwaysListen]     = useState(false)
   const [orbBottom, setOrbBottom]           = useState(0)
 
@@ -67,8 +68,18 @@ export default function JarvisCore() {
     if (!agent) {
       const fallback = "I didn't understand that. Try asking about the time, weather, today's report, or pending tasks."
       appendEntry({ role: 'assistant', text: fallback, agentName: 'Jarvis', timestamp: new Date() })
+      setLastResponse({ text: fallback, agent: 'Jarvis' })
+      setResponseVisible(true)
       setAssistantState('speaking')
-      speak(fallback, () => { processingRef.current = false; returnToReady() })
+      speak(fallback, () => {
+        processingRef.current = false
+        if (panelTimeoutRef.current) clearTimeout(panelTimeoutRef.current)
+        panelTimeoutRef.current = setTimeout(() => {
+          setDataPanelVisible(false)
+          setResponseVisible(false)
+        }, 3_000)
+        returnToReady()
+      })
       return
     }
 
@@ -82,12 +93,20 @@ export default function JarvisCore() {
       setLastAgentName(agent.name); setLastAgentData(response.data)
       if (panelTimeoutRef.current) clearTimeout(panelTimeoutRef.current)
       setDataPanelVisible(true)
+      setResponseVisible(false)
+    } else {
+      setLastResponse({ text: response.text, agent: agent.name })
+      setResponseVisible(true)
     }
 
     setAssistantState('speaking')
     speak(response.text, () => {
       processingRef.current = false
-      panelTimeoutRef.current = setTimeout(() => setDataPanelVisible(false), 3_000)
+      if (panelTimeoutRef.current) clearTimeout(panelTimeoutRef.current)
+      panelTimeoutRef.current = setTimeout(() => {
+        setDataPanelVisible(false)
+        setResponseVisible(false)
+      }, 3_000)
       returnToReady()
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -118,23 +137,12 @@ export default function JarvisCore() {
     }
   }, [alwaysListen, assistantState, enableWakeWord, disableWakeWord])
 
-  const handleStateChange = useCallback((s: AssistantState) => {
-    if (processingRef.current) return
-    cancel()
-    if (s === 'listening') {
-      disableWakeWord(); startListening()
-    } else {
-      stopListening()
-      if (alwaysListenRef.current && s === 'idle') { disableWakeWord(); setAlwaysListen(false) }
-    }
-    setAssistantState(s)
-  }, [cancel, disableWakeWord, startListening, stopListening])
-
   const handleGeometry = useCallback((_cx: number, cy: number, r: number) => {
     setOrbBottom(cy + r + 18)
   }, [])
 
   const isBusy = assistantState === 'listening' || assistantState === 'processing' || assistantState === 'speaking'
+  const panelTop = orbBottom > 0 ? orbBottom + 55 : 0
 
   return (
     <>
@@ -180,16 +188,54 @@ export default function JarvisCore() {
           </div>
         )}
 
-        {/* Data panel */}
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-44 pointer-events-none">
-          <DataPanel agentName={lastAgentName} data={lastAgentData} visible={dataPanelVisible} />
-        </div>
+        {/* Text response HUD panel — below status, text-only responses */}
+        {orbBottom > 0 && responseVisible && lastResponse && !dataPanelVisible && (
+          <div
+            className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
+            style={{ top: panelTop, width: 'min(560px, 90vw)' }}
+          >
+            <div style={{
+              background: 'linear-gradient(160deg, rgba(0,8,22,0.88), rgba(0,4,14,0.94))',
+              border: '1px solid rgba(0,160,220,0.28)',
+              borderTop: '1px solid rgba(0,200,255,0.40)',
+              backdropFilter: 'blur(20px)',
+              padding: '14px 20px',
+              position: 'relative',
+              clipPath: 'polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))',
+            }}>
+              {/* agent label */}
+              <div className="flex items-center gap-2 mb-2">
+                <span className="w-1 h-1 rounded-full" style={{ background: 'rgba(0,200,255,0.7)', boxShadow: '0 0 6px rgba(0,200,255,0.6)' }} />
+                <span style={{
+                  fontFamily: 'var(--font-orbitron)',
+                  fontSize: 8,
+                  letterSpacing: '3px',
+                  color: 'rgba(0,175,220,0.6)',
+                }}>
+                  {lastResponse.agent.toUpperCase()} · RESPONSE
+                </span>
+              </div>
+              {/* response text */}
+              <p style={{
+                fontFamily: 'var(--font-rajdhani)',
+                fontSize: 15,
+                fontWeight: 500,
+                letterSpacing: '0.5px',
+                lineHeight: 1.55,
+                color: 'rgba(180,235,255,0.90)',
+              }}>
+                {lastResponse.text}
+              </p>
+            </div>
+          </div>
+        )}
 
-        {/* Transcript */}
-        <div className="absolute left-1/2 -translate-x-1/2 w-full max-w-xl bottom-40 pointer-events-auto px-4"
-             style={{ maxHeight: 160, overflowY: 'auto' }}>
-          <TranscriptDisplay entries={entries} />
-        </div>
+        {/* Data panel — below status, structured data responses */}
+        {orbBottom > 0 && (
+          <div className="absolute left-1/2 -translate-x-1/2 pointer-events-none" style={{ top: panelTop }}>
+            <DataPanel agentName={lastAgentName} data={lastAgentData} visible={dataPanelVisible} />
+          </div>
+        )}
 
       </div>
 
@@ -197,7 +243,6 @@ export default function JarvisCore() {
       <div className="absolute bottom-0 left-0 right-0 z-10 flex justify-center pointer-events-auto">
         <CommandPanel
           onCommand={cmd => runCommand(cmd).then(resetTranscript)}
-          onStateChange={handleStateChange}
           currentState={assistantState}
           disabled={isBusy}
         />
