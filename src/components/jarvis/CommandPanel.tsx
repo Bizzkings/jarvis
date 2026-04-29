@@ -10,10 +10,10 @@ interface Props {
 }
 
 const QUICK_CMDS = [
-  { label: '▸ What time is it?',   cmd: 'what time is it'        },
-  { label: '▸ Weather report',     cmd: 'what is the weather'    },
-  { label: '▸ Run system report',  cmd: "show me today's report" },
-  { label: '▸ Show pending tasks', cmd: 'what are my pending tasks' },
+  { label: '▸ Weather report',     cmd: 'what is the weather'         },
+  { label: '▸ Pending tasks',      cmd: 'what are my pending tasks'   },
+  { label: '▸ What time is it?',   cmd: 'what time is it'             },
+  { label: '▸ Latest news brief',  cmd: 'give me a news summary'      },
 ]
 
 const CLIP_BTN  = 'polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))'

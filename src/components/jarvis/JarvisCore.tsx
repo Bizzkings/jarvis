@@ -65,23 +65,6 @@ export default function JarvisCore() {
     setAssistantState('processing')
 
     const agent = routeCommand(text)
-    if (!agent) {
-      const fallback = "I didn't understand that. Try asking about the time, weather, today's report, or pending tasks."
-      appendEntry({ role: 'assistant', text: fallback, agentName: 'Jarvis', timestamp: new Date() })
-      setLastResponse({ text: fallback, agent: 'Jarvis' })
-      setResponseVisible(true)
-      setAssistantState('speaking')
-      speak(fallback, () => {
-        processingRef.current = false
-        if (panelTimeoutRef.current) clearTimeout(panelTimeoutRef.current)
-        panelTimeoutRef.current = setTimeout(() => {
-          setDataPanelVisible(false)
-          setResponseVisible(false)
-        }, 3_000)
-        returnToReady()
-      })
-      return
-    }
 
     let response
     try { response = await agent.handle({ transcript: text }) }
