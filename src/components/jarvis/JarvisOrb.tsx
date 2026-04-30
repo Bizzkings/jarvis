@@ -110,7 +110,7 @@ export default function JarvisOrb({ state, onClick, onGeometry }: Props) {
 
     // ── Per-frame state ───────────────────────────────────────────────────
     let W = 0, H = 0, CX = 0, CY = 0, R = 0
-    let bgCv: HTMLCanvasElement | null = null
+    let bgImg: HTMLImageElement | null = null
     let T = 0, ft = performance.now()
     let mx = 0, my = 0, tx = 0, ty = 0
     let pulseQ:  { born: number }[] = []
@@ -132,259 +132,7 @@ export default function JarvisOrb({ state, onClick, onGeometry }: Props) {
       const usable = H - TOP_CHROME - BOT_CHROME
       R  = Math.min(W * 0.18, usable * 0.44, 190)
       CY = TOP_CHROME + R + Math.max(18, usable * 0.12)
-      bgCv = null
       geoRef.current?.(CX, CY, R)
-    }
-
-    // ── Background panel helpers ──────────────────────────────────────────
-
-    function panelPath(bc: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, c: number) {
-      bc.beginPath()
-      bc.moveTo(x + c, y);          bc.lineTo(x + w - c, y)
-      bc.lineTo(x + w, y + c);      bc.lineTo(x + w, y + h - c)
-      bc.lineTo(x + w - c, y + h);  bc.lineTo(x + c, y + h)
-      bc.lineTo(x, y + h - c);      bc.lineTo(x, y + c)
-      bc.closePath()
-    }
-
-    function drawWaveforms(bc: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-      const waves = [
-        { freq: 0.040, amp: 0.28, phase: 0.0, r:0,   g:200, b:255, a:0.68 },
-        { freq: 0.068, amp: 0.17, phase: 1.1, r:160, g:40,  b:255, a:0.52 },
-        { freq: 0.026, amp: 0.38, phase: 2.3, r:0,   g:255, b:175, a:0.38 },
-      ]
-      for (const wv of waves) {
-        bc.beginPath()
-        bc.strokeStyle = `rgba(${wv.r},${wv.g},${wv.b},${wv.a})`
-        bc.lineWidth = 1.2
-        bc.shadowColor = `rgba(${wv.r},${wv.g},${wv.b},0.6)`; bc.shadowBlur = 4
-        for (let xi = 0; xi <= w; xi++) {
-          const v = Math.sin(xi * wv.freq + wv.phase) * wv.amp * h
-                  + Math.sin(xi * wv.freq * 2.4 + wv.phase + 0.5) * wv.amp * 0.38 * h
-          xi === 0 ? bc.moveTo(x + xi, y + h / 2 + v) : bc.lineTo(x + xi, y + h / 2 + v)
-        }
-        bc.stroke(); bc.shadowBlur = 0
-      }
-      bc.strokeStyle = 'rgba(0,140,200,0.20)'; bc.lineWidth = 0.5
-      bc.beginPath(); bc.moveTo(x, y + h/2); bc.lineTo(x + w, y + h/2); bc.stroke()
-    }
-
-    function drawBarChart(bc: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-      const heights = [0.62, 0.38, 0.82, 0.52, 0.91, 0.33, 0.68]
-      const bw = (w - (heights.length - 1) * 3) / heights.length
-      for (let i = 0; i < heights.length; i++) {
-        const bx = x + i * (bw + 3)
-        const bh = h * heights[i]
-        const by = y + h - bh
-        const gr = bc.createLinearGradient(bx, by, bx, y + h)
-        gr.addColorStop(0,   'rgba(0,220,255,0.78)')
-        gr.addColorStop(0.5, 'rgba(0,150,220,0.55)')
-        gr.addColorStop(1,   'rgba(0,75,160,0.28)')
-        bc.fillStyle = gr; bc.fillRect(bx, by, bw, bh)
-        bc.fillStyle = 'rgba(130,245,255,0.85)'; bc.fillRect(bx, by, bw, 1.5)
-      }
-    }
-
-    function drawGauges(bc: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-      const gauges = [
-        { label: 'CORE', val: 0.72, r:0,   g:200, b:255 },
-        { label: 'NET',  val: 0.54, r:160, g:40,  b:255 },
-      ]
-      const gr = w / 2 - 10
-      const cy2 = y + h * 0.46
-      for (let i = 0; i < gauges.length; i++) {
-        const gd = gauges[i]
-        const cx2 = x + (i + 0.5) * w / 2
-        const sAng = -Math.PI / 2 - Math.PI * 0.62
-        const eAng = -Math.PI / 2 + Math.PI * 0.62
-        bc.strokeStyle = 'rgba(255,255,255,0.07)'; bc.lineWidth = 3; bc.shadowBlur = 0
-        bc.beginPath(); bc.arc(cx2, cy2, gr * 0.65, sAng, eAng); bc.stroke()
-        bc.strokeStyle = `rgba(${gd.r},${gd.g},${gd.b},0.82)`; bc.lineWidth = 3
-        bc.shadowColor = `rgba(${gd.r},${gd.g},${gd.b},0.65)`; bc.shadowBlur = 6
-        bc.beginPath(); bc.arc(cx2, cy2, gr * 0.65, sAng, sAng + (eAng - sAng) * gd.val); bc.stroke()
-        bc.shadowBlur = 0
-        bc.fillStyle = `rgba(${gd.r},${gd.g},${gd.b},0.88)`
-        bc.beginPath(); bc.arc(cx2, cy2, 2, 0, Math.PI*2); bc.fill()
-        bc.fillStyle = 'rgba(0,175,215,0.55)'; bc.font = 'bold 7px monospace'; bc.textAlign = 'center'
-        bc.fillText(gd.label, cx2, cy2 + gr * 0.65 + 11)
-      }
-    }
-
-    function drawHexGrid(bc: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-      const hs = 11, s3 = Math.sqrt(3)
-      for (let row = -1; row * hs * 1.5 < h + hs; row++) {
-        for (let col = -1; col * hs * s3 < w + hs; col++) {
-          const ox = (((row % 2) + 2) % 2) * hs * s3 / 2
-          const hx = x + col * hs * s3 + ox
-          const hy = y + row * hs * 1.5
-          if (hx < x - hs || hx > x + w + hs || hy < y - hs || hy > y + h + hs) continue
-          const dx = (hx - (x + w/2)) / w, dy = (hy - (y + h/2)) / h
-          const a = Math.max(0.04, 0.58 - Math.sqrt(dx*dx + dy*dy) * 0.85)
-          bc.strokeStyle = `rgba(0,162,255,${a})`; bc.lineWidth = 0.7
-          bc.shadowColor = 'rgba(0,162,255,0.5)'; bc.shadowBlur = a > 0.28 ? 4 : 0
-          bc.beginPath()
-          for (let e = 0; e < 6; e++) {
-            const ang = (e / 6) * Math.PI * 2 - Math.PI / 6
-            e === 0
-              ? bc.moveTo(hx + hs * 0.88 * Math.cos(ang), hy + hs * 0.88 * Math.sin(ang))
-              : bc.lineTo(hx + hs * 0.88 * Math.cos(ang), hy + hs * 0.88 * Math.sin(ang))
-          }
-          bc.closePath(); bc.stroke(); bc.shadowBlur = 0
-        }
-      }
-    }
-
-    function drawRadar(bc: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
-      const cx2 = x + w / 2, cy2 = y + h * 0.46
-      const maxR = Math.min(w, h) * 0.42
-      for (let i = 1; i <= 4; i++) {
-        bc.strokeStyle = `rgba(0,180,255,${0.10 + i * 0.04})`; bc.lineWidth = 0.7; bc.shadowBlur = 0
-        bc.beginPath(); bc.arc(cx2, cy2, maxR * i / 4, 0, Math.PI * 2); bc.stroke()
-      }
-      bc.strokeStyle = 'rgba(0,180,255,0.18)'; bc.lineWidth = 0.5
-      for (let a = 0; a < 4; a++) {
-        const ang = (a / 4) * Math.PI
-        bc.beginPath()
-        bc.moveTo(cx2 - Math.cos(ang) * maxR, cy2 - Math.sin(ang) * maxR)
-        bc.lineTo(cx2 + Math.cos(ang) * maxR, cy2 + Math.sin(ang) * maxR)
-        bc.stroke()
-      }
-      const sweepAng = Math.PI * 0.72
-      bc.fillStyle = 'rgba(0,200,255,0.07)'
-      bc.beginPath(); bc.moveTo(cx2, cy2)
-      bc.arc(cx2, cy2, maxR, sweepAng - 1.1, sweepAng); bc.closePath(); bc.fill()
-      bc.strokeStyle = 'rgba(0,230,255,0.62)'; bc.lineWidth = 1
-      bc.shadowColor = 'rgba(0,220,255,0.8)'; bc.shadowBlur = 6
-      bc.beginPath(); bc.moveTo(cx2, cy2)
-      bc.lineTo(cx2 + Math.cos(sweepAng) * maxR, cy2 + Math.sin(sweepAng) * maxR); bc.stroke()
-      bc.shadowBlur = 0
-      const blips = [{a:0.28,r:0.54}, {a:1.75,r:0.36}, {a:2.20,r:0.68}, {a:4.05,r:0.43}]
-      for (const bl of blips) {
-        bc.fillStyle = 'rgba(0,255,195,0.72)'; bc.shadowColor = 'rgba(0,255,195,0.8)'; bc.shadowBlur = 4
-        bc.beginPath()
-        bc.arc(cx2 + Math.cos(bl.a) * maxR * bl.r, cy2 + Math.sin(bl.a) * maxR * bl.r, 1.8, 0, Math.PI*2)
-        bc.fill(); bc.shadowBlur = 0
-      }
-    }
-
-    function drawHudPanel(bc: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, side: 'left'|'right') {
-      const c = 10
-      panelPath(bc, x, y, w, h, c); bc.fillStyle = 'rgba(6,1,26,0.80)'; bc.fill()
-      panelPath(bc, x, y, w, h, c)
-      bc.strokeStyle = 'rgba(0,142,215,0.70)'; bc.lineWidth = 1.2
-      bc.shadowColor = 'rgba(0,165,255,0.8)'; bc.shadowBlur = 10; bc.stroke(); bc.shadowBlur = 0
-      const tl = bc.createLinearGradient(x + c, y, x + w - c, y)
-      tl.addColorStop(0, 'rgba(0,200,255,0)'); tl.addColorStop(0.3, 'rgba(0,200,255,0.92)')
-      tl.addColorStop(0.7, 'rgba(0,200,255,0.92)'); tl.addColorStop(1, 'rgba(0,200,255,0)')
-      bc.strokeStyle = tl; bc.lineWidth = 1.5
-      bc.beginPath(); bc.moveTo(x + c, y); bc.lineTo(x + w - c, y); bc.stroke()
-      const sX = side === 'left' ? x + w - 3 : x + 3
-      const sg = bc.createLinearGradient(sX, y + 12, sX, y + h - 12)
-      sg.addColorStop(0, 'rgba(130,0,255,0)'); sg.addColorStop(0.3, 'rgba(130,0,255,0.60)')
-      sg.addColorStop(0.7, 'rgba(130,0,255,0.60)'); sg.addColorStop(1, 'rgba(130,0,255,0)')
-      bc.strokeStyle = sg; bc.lineWidth = 1
-      bc.beginPath(); bc.moveTo(sX, y + 12); bc.lineTo(sX, y + h - 12); bc.stroke()
-      const ip = 11
-      bc.save()
-      panelPath(bc, x + ip, y + ip, w - ip*2, h - ip*2, c * 0.5); bc.clip()
-      const ix = x + ip, iy = y + ip, iw = w - ip*2, ih = h - ip*2
-      if (side === 'left') {
-        drawWaveforms(bc, ix, iy + 4,           iw, ih * 0.32)
-        drawBarChart( bc, ix, iy + ih * 0.36,   iw, ih * 0.24)
-        drawGauges(   bc, ix, iy + ih * 0.65,   iw, ih * 0.32)
-      } else {
-        drawHexGrid(  bc, ix, iy + 4,           iw, ih * 0.52)
-        drawRadar(    bc, ix, iy + ih * 0.57,   iw, ih * 0.40)
-      }
-      bc.restore()
-    }
-
-    function buildBg() {
-      const bg = document.createElement('canvas')
-      bg.width = W; bg.height = H
-      const bc = bg.getContext('2d')!
-
-      const bgg = bc.createRadialGradient(W/2, H*0.30, 0, W/2, H*0.55, Math.max(W, H) * 0.80)
-      bgg.addColorStop(0,    '#180a34')
-      bgg.addColorStop(0.22, '#0e0522')
-      bgg.addColorStop(0.55, '#070219')
-      bgg.addColorStop(1,    '#02010b')
-      bc.fillStyle = bgg; bc.fillRect(0, 0, W, H)
-
-      const haze = bc.createRadialGradient(W/2, H*0.36, 0, W/2, H*0.36, W * 0.50)
-      haze.addColorStop(0,   'rgba(95,22,185,0.22)')
-      haze.addColorStop(0.42,'rgba(50,10,125,0.12)')
-      haze.addColorStop(1,   'rgba(0,0,0,0)')
-      bc.fillStyle = haze; bc.fillRect(0, 0, W, H)
-
-      const skyY = H * 0.63
-      bc.fillStyle = 'rgba(3,1,15,0.92)'
-      for (let i = 0; i < 28; i++) {
-        const bx  = W * 0.04 + (i / 27) * W * 0.92
-        const bw2 = W * 0.021 + Math.abs(Math.sin(i * 6.31)) * W * 0.012
-        const bh2 = H * 0.048 + Math.abs(Math.sin(i * 3.12 + 0.8)) * H * 0.128
-        bc.fillRect(bx - bw2/2, skyY - bh2, bw2, bh2 + H * 0.06)
-      }
-      bc.fillStyle = 'rgba(90,40,190,0.16)'
-      for (let i = 0; i < 28; i++) {
-        const bx  = W * 0.04 + (i / 27) * W * 0.92
-        const bh2 = H * 0.048 + Math.abs(Math.sin(i * 3.12 + 0.8)) * H * 0.128
-        for (let wy = 0; wy < 5; wy++) {
-          bc.fillRect(bx - 4, skyY - bh2 * 0.88 + wy * 9, 2, 3)
-          bc.fillRect(bx + 2, skyY - bh2 * 0.88 + wy * 9, 2, 3)
-        }
-      }
-      const cBloom = bc.createLinearGradient(0, skyY - H*0.08, 0, skyY + H*0.04)
-      cBloom.addColorStop(0, 'rgba(120,0,210,0.14)'); cBloom.addColorStop(1, 'rgba(0,0,0,0)')
-      bc.fillStyle = cBloom; bc.fillRect(0, skyY - H*0.08, W, H*0.12)
-
-      bc.shadowBlur = 0
-      const topStrips = [{ y:3, lw:2.0, a:0.88 }, { y:7, lw:1.0, a:0.50 }, { y:12, lw:0.5, a:0.24 }]
-      for (const ts of topStrips) {
-        const tg = bc.createLinearGradient(W*0.04, ts.y, W*0.96, ts.y)
-        tg.addColorStop(0,   'rgba(0,200,255,0)');  tg.addColorStop(0.1, `rgba(0,200,255,${ts.a})`)
-        tg.addColorStop(0.9, `rgba(0,200,255,${ts.a})`); tg.addColorStop(1, 'rgba(0,200,255,0)')
-        bc.strokeStyle = tg; bc.lineWidth = ts.lw
-        bc.shadowColor = 'rgba(0,200,255,0.85)'; bc.shadowBlur = ts.lw * 7
-        bc.beginPath(); bc.moveTo(W*0.04, ts.y); bc.lineTo(W*0.96, ts.y); bc.stroke()
-      }
-      bc.shadowBlur = 0
-
-      for (const sx of [W * 0.018, W * 0.982]) {
-        const vg = bc.createLinearGradient(sx, 0, sx, H * 0.75)
-        vg.addColorStop(0,   'rgba(0,180,255,0.55)'); vg.addColorStop(0.3, 'rgba(0,180,255,0.30)')
-        vg.addColorStop(0.7, 'rgba(100,0,220,0.20)'); vg.addColorStop(1,  'rgba(0,0,0,0)')
-        bc.strokeStyle = vg; bc.lineWidth = 1.2
-        bc.shadowColor = 'rgba(0,180,255,0.7)'; bc.shadowBlur = 8
-        bc.beginPath(); bc.moveTo(sx, 0); bc.lineTo(sx, H * 0.75); bc.stroke()
-        bc.shadowBlur = 0
-      }
-
-      if (W >= 1100) {
-        const pW = Math.min(245, W * 0.154), pH = Math.min(405, H * 0.46)
-        const pY = Math.max(H * 0.25, 120)
-        const padX = Math.max(18, W * 0.018)
-        drawHudPanel(bc, padX, pY, pW, pH, 'left')
-        drawHudPanel(bc, W - pW - padX, pY, pW, pH, 'right')
-      }
-
-      const fY = CY + R * 1.14
-      bc.strokeStyle = 'rgba(65,0,155,0.14)'; bc.lineWidth = 0.6
-      for (let lx = -16; lx <= 16; lx++) {
-        bc.beginPath(); bc.moveTo(W/2, fY)
-        bc.lineTo(W/2 + lx * W * 0.043, H + 12); bc.stroke()
-      }
-      for (let ly = 0; ly < 8; ly++) {
-        const y2 = fY + (ly / 7) * (H - fY + 20)
-        const sp = 0.10 + (ly / 7) * 0.90
-        bc.beginPath(); bc.moveTo(W/2 - W*sp, y2); bc.lineTo(W/2 + W*sp, y2); bc.stroke()
-      }
-
-      const botAmbient = bc.createLinearGradient(0, H * 0.80, 0, H)
-      botAmbient.addColorStop(0, 'rgba(0,0,0,0)'); botAmbient.addColorStop(1, 'rgba(18,0,48,0.38)')
-      bc.fillStyle = botAmbient; bc.fillRect(0, H * 0.80, W, H * 0.20)
-
-      bgCv = bg
     }
 
     // ── Orb draw functions ────────────────────────────────────────────────
@@ -698,8 +446,9 @@ export default function JarvisOrb({ state, onClick, onGeometry }: Props) {
       // Safety reset — prevents stale shadow state leaking across frames
       ctx.shadowBlur = 0
       ctx.clearRect(0, 0, W, H)
-      if (!bgCv) buildBg()
-      ctx.drawImage(bgCv!, 0, 0)
+      if (bgImg?.complete && bgImg.naturalWidth > 0) {
+        ctx.drawImage(bgImg, 0, 0, W, H)
+      }
 
       drawFloor(cfg.glow)
       outerGlow(cfg.glow)
@@ -758,6 +507,10 @@ export default function JarvisOrb({ state, onClick, onGeometry }: Props) {
     }
 
     geom()
+
+    const img = new Image()
+    img.src = '/bg.png'
+    bgImg = img
 
     const onResize  = () => geom()
     const onMove    = (e: MouseEvent) => {
