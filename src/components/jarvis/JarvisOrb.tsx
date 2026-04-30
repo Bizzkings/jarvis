@@ -450,6 +450,23 @@ export default function JarvisOrb({ state, onClick, onGeometry }: Props) {
         ctx.drawImage(bgImg, 0, 0, W, H)
       }
 
+      // Radial vignette — edges dark, orb center bright
+      const vig = ctx.createRadialGradient(CX, CY, R * 0.6, CX, CY, Math.max(W, H) * 0.82)
+      vig.addColorStop(0,   'rgba(0,0,0,0)')
+      vig.addColorStop(0.5, 'rgba(0,0,0,0.35)')
+      vig.addColorStop(1,   'rgba(0,0,0,0.82)')
+      ctx.fillStyle = vig
+      ctx.fillRect(0, 0, W, H)
+
+      // Panel content covers — dark fill, panel borders stay visible
+      const pTop  = H * 0.14
+      const pBotH = H * 0.74 - pTop
+      const leftX = W * 0.035, pW = W * 0.175
+      const rightX = W - leftX - pW
+      ctx.fillStyle = 'rgba(3, 0, 14, 0.91)'
+      ctx.fillRect(leftX  + 8, pTop + 8, pW - 16, pBotH - 16)
+      ctx.fillRect(rightX + 8, pTop + 8, pW - 16, pBotH - 16)
+
       drawFloor(cfg.glow)
       outerGlow(cfg.glow)
 
